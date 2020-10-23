@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from rest_framework import views
+from rest_framework import views, generics
 
 from userauth.serializers import UserSerializer, UserProfileSerializer, UserExperienceSerializer
 
@@ -14,14 +14,22 @@ from rest_framework import status
 
 from rest_framework.permissions import AllowAny
 
-class UserView(views.APIView):
+class UserCreateView(views.APIView):
     serializer_class = UserSerializer
 
     def post(self, request):
-        print(request.data)
         serializer = UserSerializer(data = request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status = status.HTTP_201_CREATED)
         return Response(serializer.errors, status = status.HTTP_201_CREATED)
+
+class UserRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    
+    queryset = User.objects.all()
+    serializer_class  = UserSerializer
+    
+    
+    
+        
         

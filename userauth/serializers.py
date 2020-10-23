@@ -20,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
     
     profile         = UserProfileSerializer(required=True)
     experience      = UserExperienceSerializer(required=True)
-    
+        
     class Meta:
         model   = User
         fields = ('email', 'password', 'profile', 'experience')
@@ -35,8 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
         
         user.set_password(password)
         user.save()
-        print(profile_data)
-        print(experience_data)
+
         UserProfile.objects.create(user = user,**profile_data)
         UserExperience.objects.create(user = user,**experience_data)
         
