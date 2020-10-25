@@ -7,9 +7,24 @@ from django.conf.urls.static import static
 
 from django.conf.urls import url
 
-urlpatterns = [
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
-    path('', views.UserCreateView.as_view()),
-    url(r'^(?P<pk>\d+)/$', views.UserRetrieveUpdateDeleteView.as_view()),
+
+urlpatterns = [
+    
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+    # Sign-UP
+    path('create/', views.UserCreateView.as_view()),
+    path('create/profile/<int:user_id>/', views.UserProfileCreateView.as_view()),
+    path('create/experience/<int:user_id>/', views.UserExperienceCreateView.as_view()),
+    path('account/verify/', views.AccountVerificationView.as_view()),
+    
+    path('profile/<int:profile_id>/', views.UserProfileView.as_view()),
+    # url(r'^(?P<pk>\d+)/$', views.UserRetrieveUpdateDeleteView.as_view()),
     
 ] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

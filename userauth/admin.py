@@ -4,7 +4,11 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 
 from .forms import UserAdminCreationForm, UserAdminChangeForm
-from .models import User, UserProfile, UserExperience
+from .models import User, UserProfile, UserExperience, OTPModel
+
+admin.site.register(UserExperience)
+admin.site.register(OTPModel)
+
 
 class UserProfileInline(admin.StackedInline):
     model       = UserProfile
@@ -19,7 +23,7 @@ class UserAdmin(BaseUserAdmin):
     form = UserAdminChangeForm
     add_form = UserAdminCreationForm
 
-    list_display = ('email', 'admin',)
+    list_display = ('email', 'admin',) # columns to show for each models object
     list_filter = ('admin',)
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
@@ -30,14 +34,16 @@ class UserAdmin(BaseUserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2')}
+            'fields': ('email', 'password1', 'password2', 'active','admin','staff')}
         ),
     )
     search_fields = ('email',)
     ordering = ('email',)
     filter_horizontal = ()
-    inlines = (UserProfileInline, UserExperienceInline)
+    inlines = (UserProfileInline,)
 
 
 admin.site.register(User, UserAdmin)
 admin.site.unregister(Group)
+
+
