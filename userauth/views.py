@@ -2,7 +2,7 @@ from django.shortcuts import render
 
 from rest_framework import views, generics
 
-from userauth.serializers import UserSerializer, UserProfileSerializer, UserExperienceSerializer
+from userauth.serializers import UserSerializer, UserProfileSerializer, UserExperienceSerializer, MyTokenObtainPairSerializer
 
 from userauth.models import User, UserProfile, UserExperience, OTPModel
 
@@ -18,13 +18,24 @@ import time
 
 from random import randint
 
-def OTP_create(email_linked, phone_linked):
-    OTPModel.objects.filter(email_linked__iexact = email_linked).delete()
+from rest_framework_simplejwt.views import TokenObtainPairView
+
     
+    
+def OTP_create_send(email_linked, phone_linked):
+    OTPModel.objects.filter(email_linked__iexact = email_linked).delete()
     otp = randint(100000, 999999) 
+    while OTPModel.objects.filter(otp = otp):
+        otp = randint(100000, 999999)
     time_of_creation = int(time.time())
     OTPModel.objects.create(otp = otp, email_linked = email_linked, phone_linked = phone_linked, time_created = time_of_creation) 
     return None  
+
+
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
+
 
 
 class UserCreateView(views.APIView):
@@ -37,7 +48,6 @@ class UserCreateView(views.APIView):
             return Response(serializer.data, status = status.HTTP_201_CREATED)
         return Response(serializer.errors, status = status.HTTP_201_CREATED)
     
-    
 
 
 class UserProfileCreateView(views.APIView):
@@ -46,51 +56,103 @@ class UserProfileCreateView(views.APIView):
     def post(self, request, user_id):
         data = request.data.copy()
         data['user'] = user_id
-        
+
         serializer = UserProfileSerializer(data = data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            profile = dict()
+            profile['user'] = serializer.data['id']
+            profile['org_name'] = data['current_org_name']
+            profile['is_employed'] = data['is_employed']
+            profile['position'] = data['current_position']
+            profile['start_year'] = data['start_year']
+            profile['end_year'] = data['end_year']
+
+            profile_serializer  = UserExperienceSerializer(data = profile, context={'request': request})
+            if profile_serializer.is_valid():
+                profile_serializer.save()
+            return Response(serializer.data, status = status.HTTP_201_CREATED)
+        return Response(serializer.errors, status = status.HTTP_201_CREATED)
+    
+    def patch(self, request, user_id = None):
+        try:
+            data = request.data.copy()
+            profile_id = data['profile_id']
+            user = UserProfile.objects.get(id = profile_id)
+        except:
+            raise Http404
+        
+        phone_linked    = data.get('phone_number')
+        email_linked    = User.objects.get(profile = user).email
+        OTP_create_send(email_linked, phone_linked)
+        serializer = UserProfileSerializer(user, data = data, partial = True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status = status.HTTP_204_NO_CONTENT)
+        return Response(serializer.data, status = status.HTTP_400_BAD_REQUEST)
+    
+    
+    
+class UserExperienceCreateView(views.APIView):
+    serializer_class = UserExperienceSerializer
+    
+    def post(self, request, profile_id):  
+        data = request.data.copy()
+        data['user'] = profile_id
+        
+        serializer = UserExperienceSerializer(data = request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status = status.HTTP_201_CREATED)
         return Response(serializer.errors, status = status.HTTP_201_CREATED)
     
+  
+    
 class UserProfileView(views.APIView):
     serializer_class = UserProfileSerializer
+    
+    # def post(self, request, profile_id = None):
+    #     serializer = UserProfileSerializer(data = request.data, context={'request': request})
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data, status = status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status = status.HTTP_201_CREATED)
     
     def get(self, request, profile_id):
         try:
             user = UserProfile.objects.get(id=profile_id)
         except:
             raise Http404
-        serializer = UserProfileSerializer(user)
+        serializer = UserProfileSerializer(user, context={'request': request})
         return Response(serializer.data, status = status.HTTP_200_OK)
             
         
-    def patch(self, request, profile_id):
-        try:
-            user = UserProfile.objects.get(id = profile_id)
-            data = request.data.copy()
-        except:
-            raise Http404
+    # def patch(self, request, profile_id):
+    #     try:
+    #         user = UserProfile.objects.get(id = profile_id)
+    #         data = request.data.copy()
+    #     except:
+    #         raise Http404
         
-        phone_linked    = data.get('phone_number')
-        email_linked    = User.objects.get(profile = user).email
-        OTP_create(email_linked, phone_linked)
-        serializer = UserProfileSerializer(user, data = data, partial = True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status = status.HTTP_204_NO_CONTENT)
-        return Response(serializer.data, status = status.HTTP_400_BAD_REQUEST)
+    #     phone_linked    = data.get('phone_number')
+    #     email_linked    = User.objects.get(profile = user).email
+    #     OTP_create_send(email_linked, phone_linked)
+    #     serializer = UserProfileSerializer(user, data = data, partial = True)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data, status = status.HTTP_204_NO_CONTENT)
+    #     return Response(serializer.data, status = status.HTTP_400_BAD_REQUEST)
 
      
-class UserExperienceCreateView(views.APIView):
-    serializer_class = UserExperienceSerializer
+# class UserExperienceCreateView(views.APIView):
+#     serializer_class = UserExperienceSerializer
     
-    def post(self, request):
-        serializer = UserExperienceSerializer(data = request.data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status = status.HTTP_201_CREATED)
-        return Response(serializer.errors, status = status.HTTP_201_CREATED)
+#     def post(self, request, profile_id = None):
+#         serializer = UserExperienceSerializer(data = request.data, context={'request': request})
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status = status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status = status.HTTP_201_CREATED)
 
   
 class AccountVerificationView(views.APIView):

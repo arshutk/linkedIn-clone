@@ -41,8 +41,9 @@ class UserManager(BaseUserManager):
             email,
             password=password,
         )
-        user.staff = True
-        user.admin = True
+        user.staff  = True
+        user.admin  = True
+        user.active = True
         user.save(using=self._db)
         return user
 
@@ -89,40 +90,48 @@ class User(AbstractBaseUser):
     
 class UserProfile(models.Model):
 
-    user            = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete = models.CASCADE, related_name ='profile')
-    first_name      = models.CharField(max_length = 30)
-    last_name       = models.CharField(max_length = 30)
-    avatar          = models.ImageField(upload_to = 'avatar/', blank = True, null = True, max_length = 1048576) #1MB
-    location        = models.CharField(max_length = 50)
-    phone_number    = models.CharField(max_length = 10, blank = True)
+    user                = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete = models.CASCADE, related_name ='profile')
+    first_name          = models.CharField(max_length = 30)
+    last_name           = models.CharField(max_length = 30)
+    avatar              = models.ImageField(upload_to = 'avatar/', blank = True, null = True, max_length = 1048576) #1MB
+    location            = models.CharField(max_length = 50)
+    phone_number        = models.CharField(max_length = 10, blank = True)
+    current_org_name    = models.CharField(max_length = 50)
+    is_employed         = models.BooleanField()
+    current_position    = models.CharField(max_length = 50)
+    start_year          = models.DateField(default = datetime.date.today) # yyyy-mm-dd
+    end_year            = models.DateField()
+    is_online           = models.BooleanField(default = False)
+    connection          = models.ManyToManyField('self', related_name ='connection', blank = True)
     
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
     
 class UserExperience(models.Model):
      
-    user            = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name ='experience')
-    name            = models.CharField(max_length = 50)
-    is_employed     = models.BooleanField()
-    position        = models.CharField(max_length = 50)
-    start_year      = models.DateField(default = datetime.date.today) # yyyy-mm-dd
-    end_year        = models.DateField()
+    user                = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name ='experience')
+    org_name            = models.CharField(max_length = 50)
+    is_employed         = models.BooleanField()
+    position            = models.CharField(max_length = 50)
+    start_year          = models.DateField(default = datetime.date.today) # yyyy-mm-dd
+    end_year            = models.DateField(blank = True, null = True)
     
     def __str__(self):
-        return f'{self.name} -> {self.position}'
+        return f'{self.org_name} -> {self.position}'
     
     class Meta:
         verbose_name = 'User Experience'
         verbose_name_plural = 'User Experiences'
         
 class OTPModel(models.Model):
+    
     otp              = models.CharField(max_length = 6)
     email_linked     = models.EmailField()
     phone_linked     = models.CharField(max_length = 10)
     time_created     = models.IntegerField()
 
     def __str__(self):
-        return f"{self.phone_linked} : {self.otp}"
+        return f"{self.email_linked} : {self.otp}"
     class Meta:
         verbose_name = 'OTP Model'
         verbose_name_plural = 'OTP Models'

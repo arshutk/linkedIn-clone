@@ -131,19 +131,19 @@ import os
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-        ],
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-    'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PARSER_CLASSES': (
-        'rest_framework.parsers.MultiPartParser',
-        'rest_framework.parsers.JSONParser',
-        'rest_framework.parsers.FormParser',
-    ),
-}
+# REST_FRAMEWORK = {
+#     'DEFAULT_PERMISSION_CLASSES': [
+#         'rest_framework.permissions.IsAuthenticated',
+#         ],
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#     'rest_framework_simplejwt.authentication.JWTAuthentication',
+#     ),
+#     'DEFAULT_PARSER_CLASSES': (
+#         'rest_framework.parsers.MultiPartParser',
+#         'rest_framework.parsers.JSONParser',
+#         'rest_framework.parsers.FormParser',
+#     ),
+# }
 
 from datetime import timedelta
 
