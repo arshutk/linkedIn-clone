@@ -1,12 +1,15 @@
 from rest_framework import serializers, exceptions
 
-from userauth.models import User, UserProfile, UserExperience
+from userauth.models import User, UserProfile, UserJobExperience, UserStudyExperience, Connection
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from userauth import views
 
 import json
+
+from rest_framework.response import Response
+from rest_framework import status 
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -22,24 +25,32 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             user = User.objects.get(email__iexact = email)
         except:
             raise exceptions.ParseError("User with entered email doesn't exists.")   #400
+        
+        try:
+            if user.check_password(password): 
+                user.profile
+        except:
+            raise exceptions.NotFound("User has not filled his details & is also not verified.") #404
+        
         if user.active:
-            print('lalalalalaal')
             if user.check_password(password):
                 data = super(MyTokenObtainPairSerializer, self).validate(attrs)
                 data.update({'email': self.user.email})
-                # data.update({'name' : self.user.profile.name})
-                # try:
-                    # domain_name = self.context["request"].META['HTTP_HOST']
-                    # picture_url = self.user.profile.picture.url
-                    # absolute_url = 'http://' + domain_name + picture_url
-                    # data.update({'picture': absolute_url})
-                # except:
-                    # data.update({'picture': None})
+                data.update({'is_employed' : self.user.profile.is_employed})
+                data.update({'current_org_name' : self.user.profile.current_org_name})
+                data.update({'name' : self.user.profile.current_position})
+                try:
+                    domain_name = self.context["request"].META['HTTP_HOST']
+                    picture_url = self.user.profile.avatar.url
+                    absolute_url = 'http://' + domain_name + picture_url
+                    data.update({'picture': absolute_url})
+                except:
+                    data.update({'picture': None})
                 self.user.profile.is_online = True
                 data.update({'is_online': self.user.profile.is_online})
                 return data                                                          #200
             raise exceptions.AuthenticationFailed("Entered password is wrong")       #401
-        views.OTP_create_send(self.user.email, self.user.profile.phone_number)
+        # views.OTP_create_send(self.user.email, self.user.profile.phone_number)
         raise exceptions.PermissionDenied("User is registered but not verified")     #403
     
     
@@ -52,7 +63,7 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs= {'password': {'write_only': True}}
     
     def create(self, validated_data):
-        password           = validated_data.pop('password')
+        password  = validated_data.pop('password')
         
         user = User(**validated_data)
         
@@ -61,18 +72,29 @@ class UserSerializer(serializers.ModelSerializer):
         
         return user
     
-class UserExperienceSerializer(serializers.ModelSerializer):
+class UserJobExperienceSerializer(serializers.ModelSerializer):
     
     class Meta:
-        model   = UserExperience
+        model   = UserJobExperience
         fields  = '__all__'
         
     def to_representation(self,instance):
         response = super().to_representation(instance)
         response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
         return response
+    
+class UserStudyExperienceSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model   = UserStudyExperience
+        fields  = '__all__'
         
-        
+    def to_representation(self,instance):
+        response = super().to_representation(instance)
+        response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
+        return response
+ 
+          
     
 class UserProfileSerializer(serializers.ModelSerializer):
 
@@ -85,5 +107,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
         response = super().to_representation(instance)
         response['user'] = UserSerializer(instance.user, context = {'request': self.context.get('request')}).data
         return response
-    
+   
+   
+   
+class ConnectionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model   = Connection
+        fields  = '__all__'   
 

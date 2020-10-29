@@ -21,11 +21,12 @@ urlpatterns = [
     # Sign-UP
     path('create/', views.UserCreateView.as_view()),
     path('create/profile/<int:user_id>/', views.UserProfileCreateView.as_view()),
-    path('create/experience/<int:profile_id>/', views.UserExperienceCreateView.as_view()),
     path('account/verify/', views.AccountVerificationView.as_view()),
+    
+    #OTP
+    path('otp/resend/', views.OTPResend.as_view()),
     
     
     path('profile/<int:profile_id>/', views.UserProfileView.as_view()),
-    # url(r'^(?P<pk>\d+)/$', views.UserRetrieveUpdateDeleteView.as_view()),
     
 ] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

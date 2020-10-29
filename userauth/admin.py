@@ -3,20 +3,21 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 
-from .forms import UserAdminCreationForm, UserAdminChangeForm
-from .models import User, UserProfile, UserExperience, OTPModel
+from userauth.forms import UserAdminCreationForm, UserAdminChangeForm
+from userauth.models import User, UserProfile, OTPModel, UserJobExperience, UserStudyExperience, Connection 
 
-admin.site.register(UserExperience)
+
 admin.site.register(OTPModel)
+admin.site.register(UserJobExperience)
+admin.site.register(UserStudyExperience)
+admin.site.register(Connection)
+
 
 
 class UserProfileInline(admin.StackedInline):
     model       = UserProfile
     can_delete  = False
     
-class UserExperienceInline(admin.StackedInline):
-    model       = UserExperience
-    can_delete  = False
 
 class UserAdmin(BaseUserAdmin):
 
@@ -27,7 +28,6 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ('admin',)
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        # ('Personal info', {'fields': ()}),
         ('Permissions', {'fields': ('active','admin','staff',)}),
     )
 
