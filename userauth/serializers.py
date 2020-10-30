@@ -1,6 +1,6 @@
 from rest_framework import serializers, exceptions
 
-from userauth.models import User, UserProfile, UserJobExperience, UserStudyExperience, Connection
+from userauth.models import User, UserProfile, UserJobExperience, UserStudyExperience, ConnectionFollow
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -110,9 +110,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
    
    
    
-class ConnectionSerializer(serializers.ModelSerializer):
+class ConnectionFollowSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model   = Connection
+        model   = ConnectionFollow
         fields  = '__all__'   
 

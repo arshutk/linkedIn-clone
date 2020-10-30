@@ -27,7 +27,7 @@ SECRET_KEY = '$+*06^snzto!4#$g3*j9#dvziszgcj&ov(#h5iw!dbkg%2(*wn'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['d1a9102671d2.ngrok.io','localhost']
 
 
 # Application definition
@@ -42,11 +42,15 @@ INSTALLED_APPS = [
     'userauth',
     'rest_framework',
     'phonenumber_field',
+    'corsheaders',
+
+    
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -172,3 +176,6 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
+
+
+CORS_ALLOW_ALL_ORIGINS = True

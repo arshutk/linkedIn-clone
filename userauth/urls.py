@@ -21,10 +21,10 @@ urlpatterns = [
     # Sign-UP
     path('create/', views.UserCreateView.as_view()),
     path('create/profile/<int:user_id>/', views.UserProfileCreateView.as_view()),
-    path('account/verify/', views.AccountVerificationView.as_view()),
+    path('account/verify/', views.OTPVerificationView.as_view()),
     
     #OTP
-    path('otp/resend/', views.OTPResend.as_view()),
+    path('otp/resend/', views.OTPSend.as_view()),
     
     
     path('profile/<int:profile_id>/', views.UserProfileView.as_view()),

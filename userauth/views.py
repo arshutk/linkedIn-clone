@@ -2,9 +2,9 @@ from django.shortcuts import render
 
 from rest_framework import views, generics
 
-from userauth.serializers import UserSerializer, UserProfileSerializer, MyTokenObtainPairSerializer, UserJobExperienceSerializer, UserStudyExperienceSerializer
+from userauth.serializers import UserSerializer, UserProfileSerializer, MyTokenObtainPairSerializer, UserJobExperienceSerializer, UserStudyExperienceSerializer, ConnectionFollowSerializer
 
-from userauth.models import User, UserProfile, OTPModel, UserJobExperience, UserStudyExperience, Connection
+from userauth.models import User, UserProfile, OTPModel, UserJobExperience, UserStudyExperience, ConnectionFollow
 
 from rest_framework.response import Response
 
@@ -57,7 +57,31 @@ class UserCreateView(views.APIView):
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status = status.HTTP_201_CREATED)
-            return Response(serializer.errors, status = status.HTTP_201_CREATED)
+            print(serializer.errors)
+            return Response(serializer.errors, status = status.HTTP_412_PRECONDITION_FAILED)
+    
+    
+    def patch(self, request, user_id = None):
+        
+        try:
+            data                = request.data.copy()
+            profile_id          = data['profile_id']
+            user                = UserProfile.objects.get(id = profile_id)
+        except:
+            raise Http404
+        
+        phone_linked            = data.get('phone_number')
+        queryset                = OTPModel.objects.filter(phone_linked = phone_linked)
+    
+        if not queryset.exists():
+            email_linked    = User.objects.get(profile = user).email
+            OTP_create_send(email_linked, phone_linked)
+            serializer = UserProfileSerializer(user, data = data, partial = True, context={'request': request})
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status = status.HTTP_202_ACCEPTED)
+            return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        return Response({'detail':'Phone number already in use.'}, status = status.HTTP_403_FORBIDDEN)
     
 
 
@@ -124,7 +148,7 @@ class UserProfileCreateView(views.APIView):
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status = status.HTTP_202_ACCEPTED)
-            return Response(serializer.data, status = status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
         return Response({'detail':'Phone number already in use.'}, status = status.HTTP_403_FORBIDDEN)
     
     
@@ -146,7 +170,7 @@ class UserProfileView(views.APIView):
 
 
   
-class AccountVerificationView(views.APIView):
+class OTPVerificationView(views.APIView):
     permission_classes = [AllowAny]
     
     def post(self, request):
@@ -174,10 +198,11 @@ class AccountVerificationView(views.APIView):
             return Response({'detail':'OTP expired. Request for OTP again.'}, status = status.HTTP_400_BAD_REQUEST)
         return Response({'detail':'Wrong OTP Entered.'}, status = status.HTTP_401_UNAUTHORIZED)
                    
+    
+    
+                     
                 
-                
-                
-class OTPResend(views.APIView):
+class OTPSend(views.APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):

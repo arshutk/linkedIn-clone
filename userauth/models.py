@@ -149,6 +149,10 @@ class UserStudyExperience(models.Model):
      
      
         
-class Connection(models.Model):
-     connection         = models.ManyToManyField('self', related_name ='connection', blank = True)
-     datetime           = models.DateField(auto_now_add = True)
+class ConnectionFollow(models.Model):
+    connection         = models.ManyToManyField(UserProfile, related_name ='connection', blank = True)
+    follow             = models.ManyToManyField(UserProfile, related_name ='follow', blank = True)
+    date_time          = models.DateTimeField(auto_now_add = True)
+    
+    # def __str__(self):
+    #     return f'{self.user.first_name} {self.user.last_name} : {self.organization_name}'
