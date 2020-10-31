@@ -20,8 +20,20 @@ from random import randint
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from rest_framework_simplejwt.tokens import RefreshToken
+
     
-    
+def get_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
+
+
+
+
 def OTP_create_send(email_linked, phone_linked):
     OTPModel.objects.filter(email_linked__iexact = email_linked).delete()
     otp = randint(100000, 999999) 
@@ -58,36 +70,35 @@ class UserCreateView(views.APIView):
                 serializer.save()
                 return Response(serializer.data, status = status.HTTP_201_CREATED)
             print(serializer.errors)
-            return Response(serializer.errors, status = status.HTTP_412_PRECONDITION_FAILED)
+            return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
     
     
     def patch(self, request, user_id = None):
         
         try:
             data                = request.data.copy()
-            profile_id          = data['profile_id']
-            user                = UserProfile.objects.get(id = profile_id)
+            user_id             = data.get('user_id')
+            new_password        = data.get('password')
+            user                = User.objects.get(id = user_id)
         except:
             raise Http404
         
-        phone_linked            = data.get('phone_number')
-        queryset                = OTPModel.objects.filter(phone_linked = phone_linked)
-    
-        if not queryset.exists():
-            email_linked    = User.objects.get(profile = user).email
-            OTP_create_send(email_linked, phone_linked)
-            serializer = UserProfileSerializer(user, data = data, partial = True, context={'request': request})
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status = status.HTTP_202_ACCEPTED)
-            return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-        return Response({'detail':'Phone number already in use.'}, status = status.HTTP_403_FORBIDDEN)
-    
+        if request.user == User.objects.get(pk = user_id):
+            if new_password:
+                if not user.check_password(new_password):   
+                    user.set_password(new_password)
+                    user.save()
+                    return Response({'detail':'Password changed successfully'}, status = status.HTTP_202_ACCEPTED)
+                return Response({'detail':'Password is same as old.'},status = status.HTTP_406_NOT_ACCEPTABLE)
+            return Response({'detail':'Password must not be null'}, status = status.HTTP_400_BAD_REQUEST)
+        return Response({'detail':'You can\'t change password of other users.' },status = status.HTTP_401_UNAUTHORIZED)
 
 
 class UserProfileCreateView(views.APIView):
     permission_classes = [AllowAny]
 
+
+########################do bar post ho rha
     serializer_class = UserProfileSerializer
         
     def post(self, request, user_id):
@@ -149,7 +160,7 @@ class UserProfileCreateView(views.APIView):
                 serializer.save()
                 return Response(serializer.data, status = status.HTTP_202_ACCEPTED)
             return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-        return Response({'detail':'Phone number already in use.'}, status = status.HTTP_403_FORBIDDEN)
+        return Response({'detail':'Phone number already in use.'}, status = status.HTTP_401_UNAUTHORIZED)
     
     
   
@@ -194,9 +205,10 @@ class OTPVerificationView(views.APIView):
                 user.active = True
                 user.save()
                 query.delete()
-                return Response({'detail':'User created successfully.'}, status = status.HTTP_201_CREATED)
+                # return Response({'user_id': user.id}, status = status.HTTP_201_CREATED)
+                return Response(get_tokens_for_user(user), status = status.HTTP_200_OK)
             return Response({'detail':'OTP expired. Request for OTP again.'}, status = status.HTTP_400_BAD_REQUEST)
-        return Response({'detail':'Wrong OTP Entered.'}, status = status.HTTP_401_UNAUTHORIZED)
+        return Response({'detail':'Wrong OTP Entered.'}, status = status.HTTP_403_FORBIDDEN)
                    
     
     
@@ -210,12 +222,14 @@ class OTPSend(views.APIView):
         
         try:
             email_linked = UserProfile.objects.get(phone_number = request_phone_number).user.email
+            user_id      = UserProfile.objects.get(phone_number = request_phone_number).user.id
         except:
-            return Response('{"detail":"User not found"}',status = status.HTTP_404_NOT_FOUND)
+            return Response({'detail':'User not found'} ,status = status.HTTP_404_NOT_FOUND)
 
         if request_phone_number:
             OTP_create_send(email_linked, request_phone_number)
-            return Response({"An OTP has been sent to provided phone number"}, status = status.HTTP_202_ACCEPTED)
+            return Response({'user_id': user_id}, status = status.HTTP_202_ACCEPTED)
+            # return Response({'phone_number': request_phone_number}, status = status.HTTP_202_ACCEPTED)
         
         
         
