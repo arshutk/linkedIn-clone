@@ -1,6 +1,6 @@
 from rest_framework import serializers, exceptions
 
-from userauth.models import User, UserProfile, UserJobExperience, UserStudyExperience, ConnectionFollow
+from userauth.models import User, UserProfile, UserJobExperience, UserStudyExperience, Connection
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -37,8 +37,8 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
                 data = super(MyTokenObtainPairSerializer, self).validate(attrs)
                 data.update({'email': self.user.email})
                 data.update({'is_employed' : self.user.profile.is_employed})
-                data.update({'current_org_name' : self.user.profile.current_org_name})
-                data.update({'name' : self.user.profile.current_position})
+                data.update({'organization_name' : self.user.profile.organization_name})
+                data.update({'position' : self.user.profile.position})
                 try:
                     domain_name = self.context["request"].META['HTTP_HOST']
                     picture_url = self.user.profile.avatar.url
@@ -110,9 +110,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
    
    
    
-class ConnectionFollowSerializer(serializers.ModelSerializer):
+class ConnectionSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model   = ConnectionFollow
+        model   = Connection
         fields  = '__all__'   
+        
+    def to_representation(self,instance):
+        response = super().to_representation(instance)
+        response['sender'] = UserProfileSerializer(instance.sender, context = {'request': self.context.get('request')}).data
+        response['receiver'] = UserProfileSerializer(instance.receiver, context = {'request': self.context.get('request')}).data
+        return response
 

@@ -26,7 +26,22 @@ urlpatterns = [
     #OTP
     path('otp/resend/', views.OTPSend.as_view()),
     
+    #Password Reset
+    path('password/reset/', views.OTPSend.as_view()),
+    path('password/reset/otp/verify/', views.OTPVerificationView.as_view()),
+    path('password/reset/new_password', views.UserCreateView.as_view()),
+    
     
     path('profile/<int:profile_id>/', views.UserProfileView.as_view()),
+    
+    #Follow
+    path('follow/<int:profile_id>/', views.FollowView.as_view()),
+    
+    #Connection
+    path('send/connection/<int:receiver_id>/', views.ConnectionSenderView.as_view()),
+    
+    path('delete/connection/<int:connection_id>/', views.ConnectionDeleteView.as_view()),
+    
+    path('view/pending_connection/', views.PendingConnectionRequestView.as_view()),
     
 ] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
