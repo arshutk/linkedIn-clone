@@ -150,59 +150,18 @@ class UserStudyExperience(models.Model):
         verbose_name = 'User Study Experience'
         verbose_name_plural = 'User Study Experiences'
      
-# class Connection(models.Model):
-#     # connections        = models.ManyToManyField(UserProfile, related_name ='connected_user', blank = True, through='Request') 
-#     user               = models.OneToOneField(UserProfile, on_delete = models.CASCADE)
-#     connections        = models.ManyToManyField(UserProfile, related_name ='connections', through = 'ConnectionRequest', blank = True) 
-#     pending_request    = models.ManyToManyField(UserProfile, related_name ='pending_connection', through = 'PendingConnectionRequest', blank = True)
-    
-#     def __str__(self):
-#         return f'{self.user.first_name} {self.user.last_name}'
-    
-#     class Meta:
-#         verbose_name = 'Connection'
-#         verbose_name_plural = 'Connections'
-        
-            
-
-# class ConnectionRequest(models.Model): # Connection Intermdiate Model
-#     user               = models.ForeignKey(UserProfile, on_delete = models.CASCADE)
-#     connections        = models.ForeignKey(Connection, on_delete = models.CASCADE)
-#     date_time          = models.DateTimeField(auto_now_add = True)
-    
-#     def __str__(self):
-#         return f'{self.user}'
-    
-#     class Meta:
-#         unique_together = [['user','connections']]
-#         verbose_name = 'Connected User'
-#         verbose_name_plural = 'Connected Users'
-
-
-
-# class PendingConnectionRequest(models.Model): # Pending Connection Intermdiate Model
-#     user               = models.ForeignKey(UserProfile, on_delete = models.CASCADE)
-#     requests           = models.ForeignKey(Connection, on_delete = models.CASCADE)
-#     date_time          = models.DateTimeField(auto_now_add = True)
-    
-#     def __str__(self):
-#         return f'{self.user}'
-    
-#     class Meta:
-#         unique_together = [['user','requests']]
-#         verbose_name = 'Connection Request'
-#         verbose_name_plural = 'Connection Requests'
+     
    
-class Connection(models.Model):
+# class Connection(models.Model):
     
-    receiver               = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name = 'connections')
-    sender                 = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name = 'connection_request_sent')
-    date_time              = models.DateTimeField(auto_now = True)
-    has_been_accepted      = models.BooleanField(default = False)
-    is_visible             = models.BooleanField(default = True)
+#     receiver               = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name = 'connections')
+#     sender                 = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name = 'connection_request_sent')
+#     date_time              = models.DateTimeField(auto_now = True)
+#     has_been_accepted      = models.BooleanField(default = False)
+#     is_visible             = models.BooleanField(default = True)
     
-    def __str__(self):
-        return f'{self.sender.first_name} {self.sender.last_name} > {self.receiver.first_name} {self.receiver.last_name}'
+#     def __str__(self):
+#         return f'{self.sender.first_name} {self.sender.last_name} > {self.receiver.first_name} {self.receiver.last_name}'
 
            
 

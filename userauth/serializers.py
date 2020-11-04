@@ -1,6 +1,7 @@
 from rest_framework import serializers, exceptions
 
-from userauth.models import User, UserProfile, UserJobExperience, UserStudyExperience, Connection
+# from userauth.models import User, UserProfile, UserJobExperience, UserStudyExperience, Connection
+from userauth.models import User, UserProfile, UserJobExperience, UserStudyExperience
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -8,8 +9,8 @@ from userauth import views
 
 import json
 
-from rest_framework.response import Response
 from rest_framework import status 
+
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -27,8 +28,8 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             raise exceptions.ParseError("User with entered email doesn't exists.")   #400
         
         try:
-            if user.check_password(password): 
-                user.profile
+            # if user.check_password(password): 
+            user.profile
         except:
             raise exceptions.NotFound("User has not filled his details & is also not verified.") #404
         
@@ -110,15 +111,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
    
    
    
-class ConnectionSerializer(serializers.ModelSerializer):
+# class ConnectionSerializer(serializers.ModelSerializer):
 
-    class Meta:
-        model   = Connection
-        fields  = '__all__'   
+#     class Meta:
+#         model   = Connection
+#         fields  = '__all__'   
         
-    def to_representation(self,instance):
-        response = super().to_representation(instance)
-        response['sender'] = UserProfileSerializer(instance.sender, context = {'request': self.context.get('request')}).data
-        response['receiver'] = UserProfileSerializer(instance.receiver, context = {'request': self.context.get('request')}).data
-        return response
+#     def to_representation(self,instance):
+#         response = super().to_representation(instance)
+#         response['sender'] = UserProfileSerializer(instance.sender, context = {'request': self.context.get('request')}).data
+#         response['receiver'] = UserProfileSerializer(instance.receiver, context = {'request': self.context.get('request')}).data
+#         return response
 

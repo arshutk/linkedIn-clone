@@ -27,7 +27,7 @@ SECRET_KEY = '$+*06^snzto!4#$g3*j9#dvziszgcj&ov(#h5iw!dbkg%2(*wn'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['d1a9102671d2.ngrok.io','localhost']
+ALLOWED_HOSTS = ['61b91b305111.ngrok.io','localhost']
 
 
 # Application definition
@@ -41,8 +41,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'userauth',
     'rest_framework',
-    'phonenumber_field',
     'corsheaders',
+    'phonenumber_field',
+    'network',
 
     
 ]
@@ -147,7 +148,10 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.JSONParser',
         'rest_framework.parsers.FormParser',
     ),
+
+    'EXCEPTION_HANDLER': 'userauth.utility.custom_exception_handler'
 }
+
 
 from datetime import timedelta
 
