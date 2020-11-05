@@ -198,3 +198,5 @@ class NetworkView(views.APIView):
         data        = Connection.objects.filter(sender = user, has_been_accepted = True) | Connection.objects.filter(receiver = user, has_been_accepted = True)
         serializer  = ConnectionSerializer(data, many = True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_401_UNAUTHORIZED) 
+    
+

@@ -4,14 +4,14 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 
 from userauth.forms import UserAdminCreationForm, UserAdminChangeForm
-# from userauth.models import User, UserProfile, OTPModel, UserJobExperience, UserStudyExperience, Connection
-from userauth.models import User, UserProfile, OTPModel, UserJobExperience, UserStudyExperience
+# from userauth.models import User, UserProfile, OTPModel, UserJobExperience, UserStudyExperience
+from userauth.models import User, UserProfile, OTPModel
 
 
 admin.site.register(OTPModel)
-admin.site.register(UserJobExperience)
-admin.site.register(UserStudyExperience)
-# admin.site.register(Connection)
+# admin.site.register(UserJobExperience)
+# admin.site.register(UserStudyExperience)
+
 
 
 

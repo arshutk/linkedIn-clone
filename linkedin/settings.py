@@ -27,7 +27,7 @@ SECRET_KEY = '$+*06^snzto!4#$g3*j9#dvziszgcj&ov(#h5iw!dbkg%2(*wn'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['61b91b305111.ngrok.io','localhost']
+ALLOWED_HOSTS = ['503d2ef4c8d9.ngrok.io','localhost']
 
 
 # Application definition
@@ -43,7 +43,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'phonenumber_field',
+    'userprofile',
     'network',
+    'post',
 
     
 ]

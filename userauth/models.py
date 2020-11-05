@@ -108,7 +108,7 @@ class UserProfile(models.Model):
     location            = models.CharField(max_length = 50)
     phone_number        = models.CharField(max_length = 10, blank = True)
     
-    is_employed         = models.BooleanField(default = False)
+    # is_employed         = models.BooleanField(default = False)
     organization_name   = models.CharField(max_length = 50)
     position            = models.CharField(max_length = 50)
     start_date          = models.DateField(default = datetime.date.today) # yyyy-mm-dd
@@ -121,47 +121,7 @@ class UserProfile(models.Model):
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
     
-class UserJobExperience(models.Model):
      
-    user                = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name ='job_experience')
-    organization_name   = models.CharField(max_length = 50)
-    position            = models.CharField(max_length = 50)
-    start_date          = models.DateField(default = datetime.date.today) # yyyy-mm-dd
-    end_date            = models.DateField(blank = True, null = True, default = None)
-    
-    def __str__(self):
-        return f'{self.user.first_name} {self.user.last_name} : {self.organization_name}'
-    
-    class Meta:
-        verbose_name = 'User Job Experience'
-        verbose_name_plural = 'User Job Experiences'
-        
-class UserStudyExperience(models.Model):
-     
-    user                = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name ='study_experience')
-    organization_name   = models.CharField(max_length = 50)
-    start_date          = models.DateField(default = datetime.date.today) # yyyy-mm-dd
-    end_date            = models.DateField(blank = True, null = True, default = None)
-    
-    def __str__(self):
-        return f'{self.user.first_name} {self.user.last_name} : {self.organization_name}'
-    
-    class Meta:
-        verbose_name = 'User Study Experience'
-        verbose_name_plural = 'User Study Experiences'
-     
-     
-   
-# class Connection(models.Model):
-    
-#     receiver               = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name = 'connections')
-#     sender                 = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name = 'connection_request_sent')
-#     date_time              = models.DateTimeField(auto_now = True)
-#     has_been_accepted      = models.BooleanField(default = False)
-#     is_visible             = models.BooleanField(default = True)
-    
-#     def __str__(self):
-#         return f'{self.sender.first_name} {self.sender.last_name} > {self.receiver.first_name} {self.receiver.last_name}'
 
            
 

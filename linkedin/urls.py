@@ -23,5 +23,7 @@ admin.site.index_title   = 'Administrator'
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('user/', include('userauth.urls')),
-    path('user/network', include('network.urls')),
+    path('user/profile/', include('userprofile.urls')),
+    path('user/network/', include('network.urls')),
+    # path('user/network', include('network.urls')),
 ]

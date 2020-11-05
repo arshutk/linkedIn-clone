@@ -1,7 +1,6 @@
 from rest_framework import serializers, exceptions
 
-# from userauth.models import User, UserProfile, UserJobExperience, UserStudyExperience, Connection
-from userauth.models import User, UserProfile, UserJobExperience, UserStudyExperience
+from userauth.models import User, UserProfile
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -72,30 +71,8 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         
         return user
-    
-class UserJobExperienceSerializer(serializers.ModelSerializer):
-    
-    class Meta:
-        model   = UserJobExperience
-        fields  = '__all__'
-        
-    def to_representation(self,instance):
-        response = super().to_representation(instance)
-        response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
-        return response
-    
-class UserStudyExperienceSerializer(serializers.ModelSerializer):
-    
-    class Meta:
-        model   = UserStudyExperience
-        fields  = '__all__'
-        
-    def to_representation(self,instance):
-        response = super().to_representation(instance)
-        response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
-        return response
  
-          
+         
     
 class UserProfileSerializer(serializers.ModelSerializer):
 
@@ -110,16 +87,3 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return response
    
    
-   
-# class ConnectionSerializer(serializers.ModelSerializer):
-
-#     class Meta:
-#         model   = Connection
-#         fields  = '__all__'   
-        
-#     def to_representation(self,instance):
-#         response = super().to_representation(instance)
-#         response['sender'] = UserProfileSerializer(instance.sender, context = {'request': self.context.get('request')}).data
-#         response['receiver'] = UserProfileSerializer(instance.receiver, context = {'request': self.context.get('request')}).data
-#         return response
-
