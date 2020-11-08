@@ -36,7 +36,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             if user.check_password(password):
                 data = super(MyTokenObtainPairSerializer, self).validate(attrs)
                 data.update({'email': self.user.email})
-                data.update({'is_employed' : self.user.profile.is_employed})
                 data.update({'organization_name' : self.user.profile.organization_name})
                 data.update({'position' : self.user.profile.position})
                 try:

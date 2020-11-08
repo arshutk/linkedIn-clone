@@ -27,12 +27,13 @@ SECRET_KEY = '$+*06^snzto!4#$g3*j9#dvziszgcj&ov(#h5iw!dbkg%2(*wn'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['503d2ef4c8d9.ngrok.io','localhost']
+ALLOWED_HOSTS = ['3114642bb626.ngrok.io','localhost']
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    # 'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,9 +44,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'phonenumber_field',
-    'userprofile',
+    'profile',
     'network',
     'post',
+    'organization',
+    'multiselectfield',
 
     
 ]
@@ -138,21 +141,21 @@ import os
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-        ],
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-    'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PARSER_CLASSES': (
-        'rest_framework.parsers.MultiPartParser',
-        'rest_framework.parsers.JSONParser',
-        'rest_framework.parsers.FormParser',
-    ),
+# REST_FRAMEWORK = {
+#     'DEFAULT_PERMISSION_CLASSES': [
+#         'rest_framework.permissions.IsAuthenticated',
+#         ],
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#     'rest_framework_simplejwt.authentication.JWTAuthentication',
+#     ),
+#     'DEFAULT_PARSER_CLASSES': (
+#         'rest_framework.parsers.MultiPartParser',
+#         'rest_framework.parsers.JSONParser',
+#         'rest_framework.parsers.FormParser',
+#     ),
 
-    'EXCEPTION_HANDLER': 'userauth.utility.custom_exception_handler'
-}
+#     'EXCEPTION_HANDLER': 'userauth.utility.custom_exception_handler'
+# }
 
 
 from datetime import timedelta

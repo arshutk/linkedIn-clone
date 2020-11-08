@@ -86,18 +86,7 @@ class User(AbstractBaseUser):
     def is_active(self):
         return self.active
 
-class OTPModel(models.Model):
-    
-    otp              = models.CharField(max_length = 6)
-    email_linked     = models.EmailField()
-    phone_linked     = models.CharField(max_length = 10)
-    time_created     = models.IntegerField()
 
-    def __str__(self):
-        return f"{self.email_linked} : {self.otp}"
-    class Meta:
-        verbose_name = 'OTP Model'
-        verbose_name_plural = 'OTP Models'
     
 class UserProfile(models.Model):
 
@@ -123,5 +112,16 @@ class UserProfile(models.Model):
     
      
 
-           
+class OTPModel(models.Model):
+    
+    otp              = models.CharField(max_length = 6)
+    email_linked     = models.EmailField()
+    phone_linked     = models.CharField(max_length = 10)
+    time_created     = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.email_linked} : {self.otp}"
+    class Meta:
+        verbose_name = 'OTP Model'
+        verbose_name_plural = 'OTP Models'           
 

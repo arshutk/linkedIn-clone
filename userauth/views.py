@@ -6,9 +6,9 @@ from userauth.serializers import UserSerializer, UserProfileSerializer, MyTokenO
 
 from userauth.models import User, UserProfile, OTPModel
 
-from userprofile.models import WorkExperience, Education
+from profile.models import WorkExperience, Education
 
-from userprofile.serializers import WorkExperienceSerializer, EducationSerializer
+from profile.serializers import WorkExperienceSerializer, EducationSerializer
 
 from rest_framework.response import Response
 
@@ -79,7 +79,7 @@ class UserCreateView(views.APIView):
             return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
     
     
-    def patch(self, request, user_id = None):
+    def patch(self, request):
         
         try:
             data                = request.data.copy()
@@ -89,13 +89,14 @@ class UserCreateView(views.APIView):
         except:
             raise Http404
         
+        
         if request.user == User.objects.get(pk = user_id):
             if new_password:
                 if not user.check_password(new_password):   
                     user.set_password(new_password)
                     user.save()
                     return Response({'detail':'Password changed successfully'}, status = status.HTTP_202_ACCEPTED)
-                return Response({'detail':'Password is same as old.'},status = status.HTTP_406_NOT_ACCEPTABLE)
+                return Response({'detail':'Password is same as old.'}, status = status.HTTP_406_NOT_ACCEPTABLE)
             return Response({'detail':'Password must not be null'}, status = status.HTTP_400_BAD_REQUEST)
         return Response({'detail':'You can\'t change password of other users.' },status = status.HTTP_401_UNAUTHORIZED)
 
