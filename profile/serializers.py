@@ -1,6 +1,6 @@
 from rest_framework import serializers, exceptions, fields
 
-from profile.models import WorkExperience, Education, LicenseAndCertification, VolunteerExperience, Course, Project, TestScore, Skills
+from profile.models import WorkExperience, Education, LicenseAndCertification, VolunteerExperience, Course, Project, TestScore, Skill
 
 from userauth.models import User, UserProfile
 
@@ -100,16 +100,18 @@ class TestScoreSerializer(serializers.ModelSerializer):
   
     
 from profile.models import SKILLS
-class SkillsSerializer(serializers.ModelSerializer):
+class SkillSerializer(serializers.ModelSerializer):
     
-    skills = fields.MultipleChoiceField(choices = SKILLS)
+    skills          = fields.MultipleChoiceField(choices = SKILLS)
+    top_skills      = fields.MultipleChoiceField(choices = SKILLS)
     
     
     class Meta:
-        model   = Skills
+        model   = Skill
         fields  = '__all__'
         
     def to_representation(self,instance):
         response = super().to_representation(instance)
+        print(self.context.get('request').data)
         response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
         return response

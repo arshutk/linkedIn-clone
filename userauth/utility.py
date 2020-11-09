@@ -19,15 +19,20 @@ def custom_exception_handler(exc, context):
             'user_id': user.id
         }
         response.data = custom_response_data 
+
     
     if isinstance(exc, exceptions.PermissionDenied):  
-        user    = User.objects.get(email__iexact = request.data['email'])   
-        
-        custom_response_data = { 
-            'user_id': user.id, 
-            'profile_id': user.profile.id 
-        }
-        response.data = custom_response_data 
+        try:
+            user    = User.objects.get(email__iexact = request.data['email'])   
+            
+            custom_response_data = { 
+                'user_id': user.id, 
+                'profile_id': user.profile.id 
+            }
+            response.data = custom_response_data 
+        except:
+            pass
+            
 
 
     return response

@@ -174,10 +174,10 @@ SKILLS = (    ('Tools & Technology', (('C++', 'C++'), ('Python', 'Python'), ('Dj
                                 )),
 )
           
-class Skills(models.Model):
+class Skill(models.Model):
 
-    user                = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name ='skills')
-    skills              = MultiSelectField(choices = SKILLS)
+    user                = models.OneToOneField(UserProfile, on_delete = models.CASCADE, related_name ='skills')
+    skills              = MultiSelectField(choices = SKILLS, max_length = 300)
     top_skills          = MultiSelectField(choices = SKILLS)
 
     def __str__(self):
