@@ -8,7 +8,7 @@ from userauth.models import User, UserProfile, OTPModel
 
 from profile.models import WorkExperience, Education
 
-from profile.serializers import WorkExperienceSerializer, EducationSerializer
+from profile.serializers import WorkExperienceSerializer, EducationSerializer, SocialProfileSerializer
 
 from rest_framework.response import Response
 
@@ -75,7 +75,6 @@ class UserCreateView(views.APIView):
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status = status.HTTP_201_CREATED)
-            print(serializer.errors)
             return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
     
     
@@ -127,8 +126,13 @@ class UserProfileCreateView(views.APIView):
                 job_serializer  = WorkExperienceSerializer(data = job_data, context = {'request': request})
                 if job_serializer.is_valid():
                     job_serializer.save()
-                    return Response(serializer.data, status = status.HTTP_201_CREATED)
+                    profile_serializer  = SocialProfileSerializer(data = {'user': study_serializer.data['user']['id']}, context = {'request': request})
+                    if profile_serializer.is_valid():
+                        profile_serializer.save()
+                        return Response(serializer.data, status = status.HTTP_201_CREATED)
+                    return Response(profile_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
                 return Response(job_serializer.errors, status = status.HTTP_201_CREATED)
+            
             study_data = dict()
             study_data['user'] = serializer.data['id']
             study_data['organization_name'] = data['organization_name']
@@ -140,8 +144,14 @@ class UserProfileCreateView(views.APIView):
             study_serializer  = EducationSerializer(data = study_data, context = {'request': request})
             if study_serializer.is_valid():
                 study_serializer.save()
-                return Response(serializer.data, status = status.HTTP_201_CREATED)
-            return Response(study_serializer.errors, status = status.HTTP_201_CREATED)
+                profile_serializer  = SocialProfileSerializer(data = {'user': study_serializer.data['user']['id']}, context = {'request': request})
+                if profile_serializer.is_valid():
+                    profile_serializer.save()
+                    return Response(serializer.data, status = status.HTTP_201_CREATED)
+                return Response(profile_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+            return Response(study_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
     
     
     def patch(self, request, user_id = None):

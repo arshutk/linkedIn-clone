@@ -2,12 +2,12 @@ from django.conf.urls import url
 
 from django.urls import path, include
 
-from django.conf.urls import url
-
 from rest_framework import routers
 
 from profile import views 
 
+from django.conf import settings
+from django.conf.urls.static import static
 
 router = routers.DefaultRouter()
 router.register(r'work', views.WorkExperienceViewset)
@@ -22,6 +22,7 @@ router.register(r'skills', views.SkillsViewset)
 
 urlpatterns = [
     url(r'', include(router.urls)),
-    # path('login/', views.MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    # path('strength/<int:profile_id>/', views.ProfileStrength.as_view()),
+    path('strength/', views.ProfileStrength.as_view()),
     
-] 
+] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

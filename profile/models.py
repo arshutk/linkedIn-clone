@@ -6,7 +6,22 @@ import datetime
 
 from organization.models import Organization 
 
-# import jsonfield
+
+class SocialProfile(models.Model):
+    user                = models.OneToOneField(UserProfile, on_delete = models.CASCADE, related_name ='social_profile')
+    
+    bio                 = models.TextField(blank = True, null = True)
+    headline            = models.CharField(max_length = 20, blank = True, null = True)
+    background_photo    = models.ImageField(upload_to = 'background/', blank = True, null = True, max_length = 1048576)
+    dob                 = models.DateField(blank = True, null = True, default = None)
+    profile_url         = models.TextField(blank = True, null = True)
+    
+    def __str__(self):
+        return f'{self.user.first_name} {self.user.last_name}'
+    
+    class Meta:
+        verbose_name = 'Social Profile'
+        verbose_name_plural = 'Social Profiles'
 
 
 # Background
@@ -134,7 +149,6 @@ class Project(models.Model):
         
 class TestScore(models.Model):
      
-    # user                = models.ManyToManyField(UserProfile, blank = True, related_name ='project')
     user                = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name ='test')
     title               = models.CharField(max_length = 50)
     start_date          = models.DateField(default = datetime.date.today) # yyyy-mm-dd
@@ -179,7 +193,7 @@ SKILLS = (    ('Tools & Technology', (('C++', 'C++'), ('Python', 'Python'), ('Dj
 class Skill(models.Model):
 
     user                = models.OneToOneField(UserProfile, on_delete = models.CASCADE, related_name ='skills')
-    skills              = MultiSelectField(choices = SKILLS, max_length = 300)
+    skills_list         = MultiSelectField(choices = SKILLS, max_length = 300)
     top_skills          = models.TextField(blank = True, null = True)
 
     def __str__(self):

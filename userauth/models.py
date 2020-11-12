@@ -97,14 +97,14 @@ class UserProfile(models.Model):
     location            = models.CharField(max_length = 50)
     phone_number        = models.CharField(max_length = 10, blank = True)
     
-    # background_photo    = models.ImageField(upload_to = 'background/', blank = True, null = True, max_length = 1048576)
     organization_name   = models.CharField(max_length = 50)
     position            = models.CharField(max_length = 50)
     start_date          = models.DateField(default = datetime.date.today) # yyyy-mm-dd
     end_date            = models.DateField(blank = True, null = True, default = None)
     is_online           = models.BooleanField(default = False)
     
-    followers            = models.ManyToManyField('self', related_name ='follow', blank = True)
+    followers            = models.ManyToManyField('self', related_name ='followers', blank = True)
+    
     
     
     def __str__(self):
@@ -121,7 +121,7 @@ class OTPModel(models.Model):
 
     def __str__(self):
         return f"{self.email_linked} : {self.otp}"
+    
     class Meta:
         verbose_name = 'OTP Model'
         verbose_name_plural = 'OTP Models'           
-

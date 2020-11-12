@@ -12,3 +12,6 @@ class Connection(models.Model):
     
     def __str__(self):
         return f'{self.sender.first_name} {self.sender.last_name} > {self.receiver.first_name} {self.receiver.last_name}'
+
+
+

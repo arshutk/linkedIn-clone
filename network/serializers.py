@@ -16,3 +16,4 @@ class ConnectionSerializer(serializers.ModelSerializer):
         response['sender']   = UserProfileSerializer(instance.sender, context = {'request': self.context.get('request')}).data
         response['receiver'] = UserProfileSerializer(instance.receiver, context = {'request': self.context.get('request')}).data
         return response
+

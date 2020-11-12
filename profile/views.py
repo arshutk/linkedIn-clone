@@ -1,10 +1,8 @@
 from django.shortcuts import render
 
 from profile.models import  WorkExperience, Education, LicenseAndCertification, VolunteerExperience, Course, Project, TestScore, Skill
-# , FeaturedSkill
 
 from profile.serializers import WorkExperienceSerializer, EducationSerializer, LicenseAndCertificationSerializer, VolunteerExperienceSerializer, CourseSerializer, ProjectSerializer, TestScoreSerializer, SkillSerializer
-# , FeaturedSkillSerializer
 
 from rest_framework import views, generics, viewsets
 
@@ -18,6 +16,9 @@ from rest_framework.response import Response
 
 import json
 
+from userauth.models import UserProfile
+
+from django.http import Http404
 
 class WorkExperienceViewset(viewsets.ModelViewSet):
     
@@ -203,7 +204,75 @@ class SkillsViewset(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes] 
 
     
-#     {
+# {
 #                  "skills": ["C++", "Python", "Java", "Public Speaking", "Writing","Django", "Collaborative Problem Solving"], 
 #                  "top_skills": ["Python", "Java", "Public Speaking"], "user": "3"
 # }
+
+class ProfileStrength(views.APIView):
+    
+    def get_user(self, profile_id):
+        try:
+            return UserProfile.objects.get(id = profile_id)
+        except:
+            raise Http404
+    
+    def get(self, request):
+        user                = self.get_user(request.user.profile.id)
+        
+        message             = list()
+        profile_strength    = 0
+        
+        avatar              = user.avatar
+        # followers           = user.followers.count()
+        # article
+        connections         = user.connections.filter(has_been_accepted = True).count()
+        skills              = len(user.skills.skills_list)
+        work_experiences    = user.work_experience.count()
+        academics           = user.education.count()
+        bio                 = user.social_profile.bio
+        
+        
+        if avatar:
+            profile_strength = profile_strength + 1
+        else:
+            message.append('Profile Picture')
+        
+        # if followers:
+        #     profile_strength = profile_strength + 1
+        # else:
+        #     message.append('Followers()')
+        # article
+        
+        if connections > 20:
+            profile_strength = profile_strength + 1
+        else:
+            message.append('Connections(20+)')
+        
+        if skills >= 5:
+            profile_strength = profile_strength + 1
+        else:
+            message.append('Skills(5+)')
+        
+        if work_experiences:
+            profile_strength = profile_strength + 1
+        else:
+            message.append('Work Experience')
+        
+        if academics:
+            profile_strength = profile_strength + 1
+        else:
+            message.append('Academics')
+        
+        if bio:
+            profile_strength = profile_strength + 1
+        else:
+            message.append('About')
+        
+        if len(message) == 0:
+            return Response({'detail': 'User has completed his profile.'}, status = status.HTTP_204_NO_CONTENT)      
+        return Response({'profile_strength': profile_strength, 'message': message}, status = status.HTTP_200_OK)
+            
+        
+        
+        
