@@ -26,5 +26,5 @@ urlpatterns = [
     path('user/profile/', include('profile.urls')),
     path('user/network/', include('network.urls')),
     path('user/organization/', include('organization.urls')),
-    path('user/article/', include('post.urls')),
+    path('user/post/', include('post.urls')),
 ]

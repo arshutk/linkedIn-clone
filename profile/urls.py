@@ -23,5 +23,6 @@ router.register(r'skills', views.SkillsViewset)
 urlpatterns = [
     url(r'', include(router.urls)),
     path('strength/', views.ProfileStrengthView.as_view()),
+    path('dashboard/', views.DasboardView.as_view()),
     
 ] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

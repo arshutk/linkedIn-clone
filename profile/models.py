@@ -198,7 +198,7 @@ class Skill(models.Model):
     top_skills          = models.TextField(blank = True, null = True)
 
     def __str__(self):
-        return f'{self.user.first_name} {self.user.last_name} : {self.skills}'
+        return f'{self.user.first_name} {self.user.last_name} : {self.top_skills}'
         
     class Meta:
         verbose_name = 'Skill'

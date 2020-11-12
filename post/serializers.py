@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from post.models import Post, Vote
+from post.models import Post, Vote, Upvoter, Downvoter
 
 from userauth.models import User, UserProfile
 
@@ -29,6 +29,19 @@ class VoteSerializer(serializers.ModelSerializer):
         response = super().to_representation(instance)
         response['post'] = PostSerializer(instance.post, context = {'request': self.context.get('request')}).data
         return response
+    
+class UpvoterSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model   = Upvoter
+        fields  = '__all__'
+        
+    
+class DownvoterSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model   = Downvoter
+        fields  = '__all__'
     
     
     

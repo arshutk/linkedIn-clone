@@ -224,8 +224,7 @@ class ProfileStrengthView(views.APIView):
         profile_strength    = 0
         
         avatar              = user.avatar
-        # followers           = user.followers.count()
-        # article
+        article             = user.articles.count()
         connections         = user.connections.filter(has_been_accepted = True).count()
         skills              = len(user.skills.skills_list)
         work_experiences    = user.work_experience.count()
@@ -234,49 +233,66 @@ class ProfileStrengthView(views.APIView):
         
         
         if avatar:
-            profile_strength = profile_strength + 1
+            profile_strength += 1
+            message.append({'Profile Picture': True}) 
         else:
-            message.append('Profile Picture')
-        
-        # if followers:
-        #     profile_strength = profile_strength + 1
-        # else:
-        #     message.append('Followers()')
-        # article
+            message.append({'Profile Picture': False})        
+
+        if article:
+            profile_strength += 1
+            message.append({'Article(1+)': True})
+        else:
+            message.append({'Article(1+)': False})    
         
         if connections > 20:
-            profile_strength = profile_strength + 1
+            profile_strength += 1
+            message.append({'Connections(20+)': True})
         else:
-            message.append('Connections(20+)')
-        
+            message.append({'Connections(20+)': False})        
+
         if skills >= 5:
-            profile_strength = profile_strength + 1
+            profile_strength += 1
+            message.append({'Skills(5+)': True})
         else:
-            message.append('Skills(5+)')
-        
+            message.append({'Skills(5+)': False})        
+
         if work_experiences:
-            profile_strength = profile_strength + 1
+            profile_strength += 1
+            message.append({'Work Experience': True}) 
         else:
-            message.append('Work Experience')
-        
+            message.append({'Work Experience': False})        
+
         if academics:
-            profile_strength = profile_strength + 1
+            profile_strength += 1
+            message.append({'Academics': True})
         else:
-            message.append('Academics')
-        
+            message.append({'Academics': False})        
+
         if bio:
-            profile_strength = profile_strength + 1
+            profile_strength += 1
+            message.append({'About': True})
         else:
-            message.append('About')
-        
+            message.append({'About': False})        
+
         if len(message) == 0:
             return Response({'detail': 'User has completed his profile.'}, status = status.HTTP_204_NO_CONTENT)      
         return Response({'profile_strength': profile_strength, 'message': message}, status = status.HTTP_200_OK)
             
+   
         
-class DasboardView(views.APIView):
-    
+class DasboardView(views.APIView):  
+        
     def get(self, request):
-        pass
+        user                = request.user.profile
+        
+        profile_views       = 0
+        no_of_articles      = user.articles.count()
+        bookmarked_posts    = user.bookmarked_posts.count()
+        
+        return Response({'profile_views':profile_views, 
+                         'no_of_articles':no_of_articles, 
+                         'bookmarked_posts':bookmarked_posts}, 
+                          status = status.HTTP_200_OK)
+        
         
         
