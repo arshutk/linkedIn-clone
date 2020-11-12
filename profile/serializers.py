@@ -1,6 +1,7 @@
 from rest_framework import serializers, exceptions, fields
 
 from profile.models import WorkExperience, Education, LicenseAndCertification, VolunteerExperience, Course, Project, TestScore, Skill
+# , FeaturedSkill
 
 from userauth.models import User, UserProfile
 
@@ -8,7 +9,7 @@ from userauth.serializers import UserProfileSerializer
 
 from rest_framework import status 
 
-
+import json
 
 
 class WorkExperienceSerializer(serializers.ModelSerializer):
@@ -103,7 +104,7 @@ from profile.models import SKILLS
 class SkillSerializer(serializers.ModelSerializer):
     
     skills          = fields.MultipleChoiceField(choices = SKILLS)
-    top_skills      = fields.MultipleChoiceField(choices = SKILLS)
+    # top_skills      = fields.MultipleChoiceField(choices = SKILLS)
     
     
     class Meta:
@@ -112,6 +113,18 @@ class SkillSerializer(serializers.ModelSerializer):
         
     def to_representation(self,instance):
         response = super().to_representation(instance)
-        print(self.context.get('request').data)
         response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
+        response['top_skills'] = json.decoder.JSONDecoder().decode(instance.top_skills)
         return response
+    
+    
+# class FeaturedSkillSerializer(serializers.ModelSerializer):
+    
+#     class Meta:
+#         model   = FeaturedSkill
+#         fields  = '__all__'
+        
+#     def to_representation(self,instance):
+#         response = super().to_representation(instance)
+#         response['skill'] = SkillSerializer(instance.sills, context = {'request': self.context.get('request')}).data
+#         return response

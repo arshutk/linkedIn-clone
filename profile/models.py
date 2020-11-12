@@ -6,6 +6,7 @@ import datetime
 
 from organization.models import Organization 
 
+# import jsonfield
 
 
 # Background
@@ -173,12 +174,13 @@ SKILLS = (    ('Tools & Technology', (('C++', 'C++'), ('Python', 'Python'), ('Dj
                                  ('Strategic Negotiations', 'Strategic Negotiations'), ('Customer Service', 'Customer Service'),
                                 )),
 )
-          
+      
+ 
 class Skill(models.Model):
 
     user                = models.OneToOneField(UserProfile, on_delete = models.CASCADE, related_name ='skills')
     skills              = MultiSelectField(choices = SKILLS, max_length = 300)
-    top_skills          = MultiSelectField(choices = SKILLS)
+    top_skills          = models.TextField(blank = True, null = True)
 
     def __str__(self):
         return f'{self.user.first_name} {self.user.last_name} : {self.skills}'
@@ -186,3 +188,5 @@ class Skill(models.Model):
     class Meta:
         verbose_name = 'Skill'
         verbose_name_plural = 'Skills'
+        
+    

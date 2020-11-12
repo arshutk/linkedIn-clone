@@ -97,7 +97,7 @@ class UserProfile(models.Model):
     location            = models.CharField(max_length = 50)
     phone_number        = models.CharField(max_length = 10, blank = True)
     
-    # is_employed         = models.BooleanField(default = False)
+    # background_photo    = models.ImageField(upload_to = 'background/', blank = True, null = True, max_length = 1048576)
     organization_name   = models.CharField(max_length = 50)
     position            = models.CharField(max_length = 50)
     start_date          = models.DateField(default = datetime.date.today) # yyyy-mm-dd
