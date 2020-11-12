@@ -22,7 +22,6 @@ router.register(r'skills', views.SkillsViewset)
 
 urlpatterns = [
     url(r'', include(router.urls)),
-    # path('strength/<int:profile_id>/', views.ProfileStrength.as_view()),
-    path('strength/', views.ProfileStrength.as_view()),
+    path('strength/', views.ProfileStrengthView.as_view()),
     
 ] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

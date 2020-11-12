@@ -209,7 +209,7 @@ class SkillsViewset(viewsets.ModelViewSet):
 #                  "top_skills": ["Python", "Java", "Public Speaking"], "user": "3"
 # }
 
-class ProfileStrength(views.APIView):
+class ProfileStrengthView(views.APIView):
     
     def get_user(self, profile_id):
         try:
@@ -274,5 +274,9 @@ class ProfileStrength(views.APIView):
         return Response({'profile_strength': profile_strength, 'message': message}, status = status.HTTP_200_OK)
             
         
+class DasboardView(views.APIView):
+    
+    def get(self, request):
+        pass
         
         

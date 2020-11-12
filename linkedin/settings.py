@@ -44,11 +44,12 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'phonenumber_field',
+    'multiselectfield',
     'profile',
     'network',
-    'post',
     'organization',
-    'multiselectfield',
+    'post',
+
 
     
 ]

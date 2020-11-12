@@ -16,6 +16,7 @@ class SocialProfile(models.Model):
     dob                 = models.DateField(blank = True, null = True, default = None)
     profile_url         = models.TextField(blank = True, null = True)
     
+    
     def __str__(self):
         return f'{self.user.first_name} {self.user.last_name}'
     
