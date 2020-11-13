@@ -19,8 +19,7 @@ class WorkExperienceSerializer(serializers.ModelSerializer):
         
     def to_representation(self,instance):
         response = super().to_representation(instance)
-        # response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
-        response['user_name'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data['first_name']
+        response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data['id']
         return response
     
     
@@ -112,7 +111,7 @@ class SkillSerializer(serializers.ModelSerializer):
         
     def to_representation(self,instance):
         response = super().to_representation(instance)
-        response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
+        response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data['id']
         response['top_skills'] = json.decoder.JSONDecoder().decode(instance.top_skills)
         return response
     

@@ -165,7 +165,7 @@ class SkillsViewset(viewsets.ModelViewSet):
     
     def create(self, request):
         data            = request.data.copy()
-        skills          = request.data.get('skills')
+        skills          = request.data.get('skills_list')
         
         
         if skills:
@@ -184,7 +184,30 @@ class SkillsViewset(viewsets.ModelViewSet):
             return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
         return Response({'detail':'Skills list must not be empty.'}, status = status.HTTP_400_BAD_REQUEST)
     
-
+    def update(self, request, pk):
+        data            = request.data.copy()
+        skills_list     = data.get('skills_list')
+        
+        skills          = Skill.objects.get(pk = pk)
+        
+        
+        if skills:
+            if len(skills_list) <= 3:
+                data['top_skills'] = json.dumps(skills_list)
+                serializer = SkillSerializer(skills, data = data, context={'request': request})
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data, status = status.HTTP_201_CREATED)
+                return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+            data['top_skills'] = json.dumps(skills_list[:3])
+            serializer = SkillSerializer(skills, data = data, context={'request': request})
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status = status.HTTP_201_CREATED)
+            return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        return Response({'detail':'Skills list must not be empty.'}, status = status.HTTP_400_BAD_REQUEST)
+    
+    
     def partial_update(self, request, pk):
         
         top_skills = request.data.get('top_skills')
@@ -195,7 +218,8 @@ class SkillsViewset(viewsets.ModelViewSet):
         if top_skills:
             if len(top_skills) <= 3:
                 if len(top_skills) == 3:
-                    serializer = SkillSerializer(skills, data = request.data, partial=True, context={'request': request})
+                    top_skills = json.dumps(top_skills)
+                    serializer = SkillSerializer(skills, data = {'top_skills':top_skills}, partial=True, context={'request': request})
                     if serializer.is_valid():
                         serializer.save()
                         return Response(serializer.data, status = status.HTTP_200_OK)
@@ -227,10 +251,6 @@ class SkillsViewset(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes] 
 
     
-# {
-#                  "skills": ["C++", "Python", "Java", "Public Speaking", "Writing","Django", "Collaborative Problem Solving"], 
-#                  "top_skills": ["Python", "Java", "Public Speaking"], "user": "3"
-# }
 
 #  {
 #                  "top_skills": ["Django", "Java"]

@@ -37,6 +37,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         if user.active:
             if user.check_password(password):
                 data = super(MyTokenObtainPairSerializer, self).validate(attrs)
+                data.update({'profile_id': self.user.profile.id})
                 try:
                     domain_name = self.context["request"].META['HTTP_HOST']
                     picture_url = self.user.profile.avatar.url
@@ -57,6 +58,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
                                       Connection.objects.filter(receiver = self.user.profile, has_been_accepted = True).count()
                 data.update({'connection' : connection})
                 data.update({'profile_views': 0})  
+                data.update({'about_id': self.user.profile.social_profile.id})
                 self.user.profile.is_online = True
                 data.update({'is_online': self.user.profile.is_online})
                 return data                                                          #200
