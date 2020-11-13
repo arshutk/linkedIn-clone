@@ -24,72 +24,20 @@ class Post(models.Model):
    def __str__(self):
       return f'{self.written_by.first_name} {self.written_by.last_name} : {self.text[:30]}'
     
-       
-        
-class Like(models.Model):
    
-   post              = models.OneToOneField(Post, on_delete=models.CASCADE, related_name="likes")
-   vote              = models.IntegerField(default = 0)
-   upvoter           = models.ManyToManyField(UserProfile, blank = True, related_name = 'like_upvoter')
-   downvoter         = models.ManyToManyField(UserProfile, blank = True, related_name = 'like_downvoter')
-
-   def __str__(self):
-      return f'{self.post.text[:30]} : like : {self.vote}'
-    
+class Vote(models.Model):
+   CHOICE = (  
+             ('like','like'),
+             ('celebrate','celebrate'),
+             ('support','support'),
+             ('love','love'),
+             ('insightful','insightful'),
+             ('curious','curious')
+            )
    
-class Celebrate(models.Model):
-   
-   post              = models.OneToOneField(Post, on_delete=models.CASCADE, related_name="celebrated")
-   vote              = models.IntegerField(default = 0)
-   upvoter           = models.ManyToManyField(UserProfile, blank = True, related_name = 'celebrate_upvoter')
-   downvoter         = models.ManyToManyField(UserProfile, blank = True, related_name = 'celebrate_downvoter')
-
-   def __str__(self):
-      return f'{self.post.text[:30]} : celebrate : {self.vote}'
-    
-   
-class Support(models.Model):
-   
-   post              = models.OneToOneField(Post, on_delete=models.CASCADE, related_name="supports")
-   vote              = models.IntegerField(default = 0)
-   upvoter           = models.ManyToManyField(UserProfile, blank = True, related_name = 'support_upvoter')
-   downvoter         = models.ManyToManyField(UserProfile, blank = True, related_name = 'support_downvoter')
-
-   def __str__(self):
-      return f'{self.post.text[:30]} : support : {self.vote}'
-    
-   
-class Love(models.Model):
-   
-   post              = models.OneToOneField(Post, on_delete=models.CASCADE, related_name="loves")
-   vote              = models.IntegerField(default = 0)
-   upvoter           = models.ManyToManyField(UserProfile, blank = True, related_name = 'love_upvoter')
-   downvoter         = models.ManyToManyField(UserProfile, blank = True, related_name = 'love_downvoter')
-
-   def __str__(self):
-      return f'{self.post.text[:30]} : love : {self.vote}'
-    
-   
-class Insightful(models.Model):
-   
-   post              = models.OneToOneField(Post, on_delete=models.CASCADE, related_name="insightful")
-   vote              = models.IntegerField(default = 0)
-   upvoter           = models.ManyToManyField(UserProfile, blank = True, related_name = 'insightful_upvoter')
-   downvoter         = models.ManyToManyField(UserProfile, blank = True, related_name = 'insightful_downvoter')
-
-   def __str__(self):
-      return f'{self.post.text[:30]} : insightful {self.vote}'
-    
-   
-class Curious(models.Model):
-   
-   post              = models.OneToOneField(Post, on_delete=models.CASCADE, related_name="curious")
-   vote              = models.IntegerField(default = 0)
-   upvoter           = models.ManyToManyField(UserProfile, blank = True, related_name = 'curious_upvoter')
-   downvoter         = models.ManyToManyField(UserProfile, blank = True, related_name = 'curious_downvoter')
-
-   def __str__(self):
-      return f'{self.post.text[:30]} : curious {self.vote}'
+   post              = models.ForeignKey(Post, on_delete=models.CASCADE, related_name = "votes")
+   vote_type         = models.CharField(choices = CHOICE, default = None, max_length = 10)
+   voter             = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name = "votes")
     
    
       

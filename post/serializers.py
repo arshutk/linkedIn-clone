@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from post.models import Post, Like, Celebrate, Support, Love, Insightful, Curious
+from post.models import Post, Vote
+# , Like, Celebrate, Support, Love, Insightful, Curious
 
 from userauth.models import User, UserProfile
 
@@ -19,40 +20,46 @@ class PostSerializer(serializers.ModelSerializer):
         return response
     
     
-class LikeSerializer(serializers.ModelSerializer):
+# class LikeSerializer(serializers.ModelSerializer):
     
-    class Meta:
-        model   = Like
-        fields  = '__all__'
+#     class Meta:
+#         model   = Like
+#         fields  = '__all__'
 
-class CelebrateSerializer(serializers.ModelSerializer):
+# class CelebrateSerializer(serializers.ModelSerializer):
     
-    class Meta:
-        model   = Celebrate
-        fields  = '__all__'
+#     class Meta:
+#         model   = Celebrate
+#         fields  = '__all__'
         
         
-class SupportSerializer(serializers.ModelSerializer):
+# class SupportSerializer(serializers.ModelSerializer):
     
-    class Meta:
-        model   = Support
-        fields  = '__all__'
+#     class Meta:
+#         model   = Support
+#         fields  = '__all__'
         
-class LoveSerializer(serializers.ModelSerializer):
+# class LoveSerializer(serializers.ModelSerializer):
     
-    class Meta:
-        model   = Love
-        fields  = '__all__'
+#     class Meta:
+#         model   = Love
+#         fields  = '__all__'
         
-class InsightfulSerializer(serializers.ModelSerializer):
+# class InsightfulSerializer(serializers.ModelSerializer):
     
-    class Meta:
-        model   = Insightful
-        fields  = '__all__'
+#     class Meta:
+#         model   = Insightful
+#         fields  = '__all__'
         
-class CuriousSerializer(serializers.ModelSerializer):
+# class CuriousSerializer(serializers.ModelSerializer):
+    
+#     class Meta:
+#         model   = Curious
+#         fields  = '__all__'
+        
+class VoteSerializer(serializers.ModelSerializer):
     
     class Meta:
-        model   = Curious
+        model   = Vote
         fields  = '__all__'
         

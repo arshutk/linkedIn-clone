@@ -378,7 +378,6 @@ class BasicInfoView(views.APIView):
     
     def get(self, request):
         user                = request.user.profile
-        data                = dict()
         try:
             domain_name = request.META['HTTP_HOST']
             picture_url = user.avatar.url
@@ -399,17 +398,25 @@ class BasicInfoView(views.APIView):
         profile_views       = 0
         bookmarked_posts    = user.bookmarked_posts.count()
         
-        work_experience     = user.social_profile.current_work_organization
-        academic_experience = user.social_profile.current_academic_organization
+        try:
+            work_experience     = user.social_profile.current_work_organization
+        except:
+            work_experience     = None
+        
+        try:
+            academic_experience = user.social_profile.current_academic_organization
+        except:
+            academic_experience = None
         
         
         if work_experience:
             if academic_experience:
                 experience  = [work_experience.organization_name, academic_experience.organization_name]
-            else:
-                experience  = [work_experience.organization_name]
+            experience  = [work_experience.organization_name]
         else:
-            experience      = [academic_experience.organization_name]
+            if academic_experience:
+                experience      = [academic_experience.organization_name]
+            experience      = []
 
         about               = user.social_profile.bio
         

@@ -203,8 +203,8 @@ class SocialProfile(models.Model):
     background_photo                = models.ImageField(upload_to = 'background/', blank = True, null = True, max_length = 1048576)
     dob                             = models.DateField(blank = True, null = True, default = None)
     profile_url                     = models.TextField(blank = True, null = True)
-    current_work_organization       = models.OneToOneField(WorkExperience, blank = True, null = True, on_delete = models.CASCADE, default = None, related_name ='current_work')
-    current_academic_organization   = models.OneToOneField(Education, blank = True, null = True,on_delete = models.CASCADE, default = None, related_name ='current_academic')
+    current_work_organization       = models.OneToOneField(WorkExperience, blank = True, null = True, on_delete = models.SET_NULL, default = None, related_name ='current_work')
+    current_academic_organization   = models.OneToOneField(Education, blank = True, null = True,on_delete = models.SET_NULL, default = None, related_name ='current_academic')
     
     
     def __str__(self):
