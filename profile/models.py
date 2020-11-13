@@ -6,24 +6,7 @@ import datetime
 
 from organization.models import Organization 
 
-
-class SocialProfile(models.Model):
-    user                = models.OneToOneField(UserProfile, on_delete = models.CASCADE, related_name ='social_profile')
-    
-    bio                 = models.TextField(blank = True, null = True)
-    headline            = models.CharField(max_length = 20, blank = True, null = True)
-    background_photo    = models.ImageField(upload_to = 'background/', blank = True, null = True, max_length = 1048576)
-    dob                 = models.DateField(blank = True, null = True, default = None)
-    profile_url         = models.TextField(blank = True, null = True)
-    
-    
-    def __str__(self):
-        return f'{self.user.first_name} {self.user.last_name}'
-    
-    class Meta:
-        verbose_name = 'Social Profile'
-        verbose_name_plural = 'Social Profiles'
-
+# - => Descending
 
 # Background
 class WorkExperience(models.Model):
@@ -40,7 +23,9 @@ class WorkExperience(models.Model):
     class Meta:
         verbose_name = 'Work Experience'
         verbose_name_plural = 'Work Experiences'
-        
+        ordering = ('-start_date',)
+
+
 class Education(models.Model):
      
     user                = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name ='education')
@@ -54,6 +39,7 @@ class Education(models.Model):
     class Meta:
         verbose_name = 'Academic '
         verbose_name_plural = 'Academics'
+        ordering = ('-start_date',)
         
         
 class LicenseAndCertification(models.Model):
@@ -73,6 +59,7 @@ class LicenseAndCertification(models.Model):
     class Meta:
         verbose_name = 'License And Certification'
         verbose_name_plural = 'License And Certifications'
+        ordering = ('-issue_date',)
         
         
 class VolunteerExperience(models.Model):
@@ -108,6 +95,7 @@ class VolunteerExperience(models.Model):
     class Meta:
         verbose_name = 'Volunteer Experience'
         verbose_name_plural = 'Volunteer Experiences'
+        ordering = ('-start_date',)
 
 
 # Accomplishments
@@ -126,6 +114,7 @@ class Course(models.Model):
     class Meta:
         verbose_name = 'Course'
         verbose_name_plural = 'Courses'
+        ordering = ('-passed_date',)
         
 
 class Project(models.Model):
@@ -146,14 +135,13 @@ class Project(models.Model):
     class Meta:
         verbose_name = 'Project'
         verbose_name_plural = 'Projects'
-        
+        ordering = ('-start_date',)
         
 class TestScore(models.Model):
      
     user                = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name ='test')
     title               = models.CharField(max_length = 50)
-    start_date          = models.DateField(default = datetime.date.today) # yyyy-mm-dd
-    end_date            = models.DateField(blank = True, null = True, default = None)
+    test_date           = models.DateField(blank = True, null = True, default = None)
     organization_name   = models.ForeignKey(Organization, on_delete = models.CASCADE, null = True, blank= True, related_name ='test_organization')
     project_url         = models.URLField(blank = True, null = True)
     description         = models.TextField(blank = True, null = True)
@@ -166,6 +154,7 @@ class TestScore(models.Model):
     class Meta:
         verbose_name = 'Test Score'
         verbose_name_plural = 'Test Scores'
+        ordering = ('-test_date',)
     
     
         
@@ -205,3 +194,22 @@ class Skill(models.Model):
         verbose_name_plural = 'Skills'
         
     
+    
+class SocialProfile(models.Model):
+    user                            = models.OneToOneField(UserProfile, on_delete = models.CASCADE, related_name ='social_profile')
+    
+    bio                             = models.TextField(blank = True, null = True)
+    headline                        = models.CharField(max_length = 60, blank = True, null = True)
+    background_photo                = models.ImageField(upload_to = 'background/', blank = True, null = True, max_length = 1048576)
+    dob                             = models.DateField(blank = True, null = True, default = None)
+    profile_url                     = models.TextField(blank = True, null = True)
+    current_work_organization       = models.OneToOneField(WorkExperience, blank = True, null = True, on_delete = models.CASCADE, default = None, related_name ='current_work')
+    current_academic_organization   = models.OneToOneField(Education, blank = True, null = True,on_delete = models.CASCADE, default = None, related_name ='current_academic')
+    
+    
+    def __str__(self):
+        return f'{self.user.first_name} {self.user.last_name}'
+    
+    class Meta:
+        verbose_name = 'Social Profile'
+        verbose_name_plural = 'Social Profiles'

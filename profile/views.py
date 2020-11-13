@@ -1,8 +1,11 @@
 from django.shortcuts import render
 
-from profile.models import  WorkExperience, Education, LicenseAndCertification, VolunteerExperience, Course, Project, TestScore, Skill
+from profile.models import  WorkExperience, Education, LicenseAndCertification, VolunteerExperience, Course, Project, TestScore, \
+                            Skill, SocialProfile
 
-from profile.serializers import WorkExperienceSerializer, EducationSerializer, LicenseAndCertificationSerializer, VolunteerExperienceSerializer, CourseSerializer, ProjectSerializer, TestScoreSerializer, SkillSerializer
+from profile.serializers import WorkExperienceSerializer, EducationSerializer, LicenseAndCertificationSerializer, \
+                                VolunteerExperienceSerializer, CourseSerializer, ProjectSerializer, TestScoreSerializer, \
+                                SkillSerializer, SocialProfileSerializer
 
 from rest_framework import views, generics, viewsets
 
@@ -20,6 +23,24 @@ from userauth.models import UserProfile
 
 from django.http import Http404
 
+from network.models import Connection
+
+
+class SocialProfileView(viewsets.ModelViewSet):
+    
+    queryset = SocialProfile.objects.all()
+    serializer_class = SocialProfileSerializer
+    
+    def get_permissions(self):
+        permission_classes = []
+        if self.action == 'create':
+            permission_classes = [IsAuthenticated]
+        elif self.action == 'retrieve' or self.action == 'update' or self.action == 'partial_update' or self.action == 'destroy':
+            permission_classes = [IsAuthenticatedAndOwner]
+        elif self.action == 'list':
+            permission_classes = []
+        return [permission() for permission in permission_classes]
+
 class WorkExperienceViewset(viewsets.ModelViewSet):
     
     queryset = WorkExperience.objects.all()
@@ -30,9 +51,10 @@ class WorkExperienceViewset(viewsets.ModelViewSet):
         if self.action == 'create':
             permission_classes = [IsAuthenticated]
         elif self.action == 'retrieve' or self.action == 'update' or self.action == 'partial_update' or self.action == 'destroy':
-            permission_classes = [IsAuthenticatedAndOwner]
+            permission_classes = []
+            # permission_classes = [IsAuthenticatedAndOwner]
         elif self.action == 'list':
-            permission_classes = [IsAdminUser]
+            permission_classes = []
         return [permission() for permission in permission_classes]
 
 
@@ -46,9 +68,10 @@ class EducationViewset(viewsets.ModelViewSet):
         if self.action == 'create':
             permission_classes = [IsAuthenticated]
         elif self.action == 'retrieve' or self.action == 'update' or self.action == 'partial_update' or self.action == 'destroy':
-            permission_classes = [IsAuthenticatedAndOwner]
+            # permission_classes = [IsAuthenticatedAndOwner]
+            permission_classes = []
         elif self.action == 'list':
-            permission_classes = [IsAdminUser]
+            permission_classes = []
         return [permission() for permission in permission_classes]
 
 
@@ -209,6 +232,39 @@ class SkillsViewset(viewsets.ModelViewSet):
 #                  "top_skills": ["Python", "Java", "Public Speaking"], "user": "3"
 # }
 
+#  {
+#                  "top_skills": ["Django", "Java"]
+
+# }
+
+class GetWorkView(views.APIView):
+    
+    def get(self, request):
+        
+        user = request.user.profile 
+        
+        try:
+            work_experience = user.work_experience.all()
+            serializer = WorkExperienceSerializer(work_experience, many = True, context = {'request':request})
+            return Response(serializer.data, status = status.HTTP_200_OK)
+        except:
+            return Response({'detail':'No work experience yet'}, status = status.HTTP_200_OK)
+        
+        
+class GetAcademicView(views.APIView):
+    
+    def get(self, request):
+        
+        user = request.user.profile 
+        
+        try:
+            academic_experience = user.education.all()
+            serializer = EducationSerializer(academic_experience, many = True, context = {'request':request})
+            return Response(serializer.data, status = status.HTTP_200_OK)
+        except:
+            return Response({'detail':'No work experience yet'}, status = status.HTTP_200_OK)
+             
+
 class ProfileStrengthView(views.APIView):
     
     def get_user(self, profile_id):
@@ -220,13 +276,18 @@ class ProfileStrengthView(views.APIView):
     def get(self, request):
         user                = self.get_user(request.user.profile.id)
         
-        message             = list()
+        message             = dict()
         profile_strength    = 0
         
         avatar              = user.avatar
         article             = user.articles.count()
-        connections         = user.connections.filter(has_been_accepted = True).count()
-        skills              = len(user.skills.skills_list)
+        connections         = user.connection_request_received.filter(has_been_accepted = True).count() + \
+                              user.connection_request_sent.filter(has_been_accepted = True).count()
+        try:
+            skills          = len(user.skills.skills_list)
+        except:
+            skills          = 0
+            
         work_experiences    = user.work_experience.count()
         academics           = user.education.count()
         bio                 = user.social_profile.bio
@@ -234,45 +295,45 @@ class ProfileStrengthView(views.APIView):
         
         if avatar:
             profile_strength += 1
-            message.append({'Profile Picture': True}) 
+            message['Profile Picture'] = True
         else:
-            message.append({'Profile Picture': False})        
+            message['Profile Picture'] = False        
 
         if article:
             profile_strength += 1
-            message.append({'Article(1+)': True})
+            message['Article(1+)'] = True
         else:
-            message.append({'Article(1+)': False})    
+            message['Article(1+)'] = False  
         
         if connections > 20:
             profile_strength += 1
-            message.append({'Connections(20+)': True})
+            message['Connections(20+)'] = True
         else:
-            message.append({'Connections(20+)': False})        
+            message['Connections(20+)'] = False        
 
         if skills >= 5:
             profile_strength += 1
-            message.append({'Skills(5+)': True})
+            message['Skills(5+)'] = True
         else:
-            message.append({'Skills(5+)': False})        
+            message['Skills(5+)'] = False        
 
         if work_experiences:
             profile_strength += 1
-            message.append({'Work Experience': True}) 
+            message['Work Experience'] = True 
         else:
-            message.append({'Work Experience': False})        
+            message['Work Experience'] = False        
 
         if academics:
             profile_strength += 1
-            message.append({'Academics': True})
+            message['Academics'] = True
         else:
-            message.append({'Academics': False})        
+            message['Academics'] = False        
 
         if bio:
             profile_strength += 1
-            message.append({'About': True})
+            message['About'] = True
         else:
-            message.append({'About': False})        
+            message['About'] = False        
 
         if len(message) == 0:
             return Response({'detail': 'User has completed his profile.'}, status = status.HTTP_204_NO_CONTENT)      
@@ -291,6 +352,55 @@ class DasboardView(views.APIView):
         
         return Response({'profile_views':profile_views, 
                          'no_of_articles':no_of_articles, 
+                         'bookmarked_posts':bookmarked_posts}, 
+                          status = status.HTTP_200_OK)
+        
+
+class BasicInfoView(views.APIView):
+    
+    def get(self, request):
+        user                = request.user.profile
+        data                = dict()
+        try:
+            domain_name = request.META['HTTP_HOST']
+            picture_url = user.avatar.url
+            absolute_url = 'http://' + domain_name + picture_url
+            avatar = absolute_url
+        except:
+            avatar = None
+            
+        first_name          = user.first_name
+        last_name           = user.last_name 
+        headline            = user.social_profile.headline.split()
+        position            = f'{headline[0]} {headline[1]}' 
+        organization        = headline[2]       
+        connection          = Connection.objects.filter(sender = user, has_been_accepted = True).count() + \
+                              Connection.objects.filter(receiver = user, has_been_accepted = True).count()
+        profile_views       = 0
+        bookmarked_posts    = user.bookmarked_posts.count()
+        
+        work_experience     = user.social_profile.current_work_organization
+        academic_experience = user.social_profile.current_academic_organization
+        
+        
+        if work_experience:
+            if academic_experience:
+                experience  = [work_experience.organization_name, academic_experience.organization_name]
+            else:
+                experience  = [work_experience.organization_name]
+        else:
+            experience  = [academic_experience.organization_name]
+
+            
+        return Response({'avatar':avatar,
+                         'first_name':first_name, 
+                         'last_name':last_name, 
+                         'position':position, 
+                         'organization':organization, 
+                         'organization':organization, 
+                         'experience':experience, 
+                         'connection':connection, 
+                         'profile_views':profile_views, 
                          'bookmarked_posts':bookmarked_posts}, 
                           status = status.HTTP_200_OK)
         

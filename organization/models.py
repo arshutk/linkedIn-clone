@@ -133,8 +133,8 @@ class JobVacancy(models.Model):
         return f'{self.organisation.name} : {self.title} : {self.location}'
     
     class Meta:
-        verbose_name = 'Test Score'
-        verbose_name_plural = 'Test Scores'
+        verbose_name = 'Job Vacancy'
+        verbose_name_plural = 'Job Vacancies'
 
 class JobVacancyQuestion(models.Model):
     organization        = models.ForeignKey(JobVacancy, on_delete = models.CASCADE, related_name = 'screening_questions')

@@ -19,7 +19,8 @@ class WorkExperienceSerializer(serializers.ModelSerializer):
         
     def to_representation(self,instance):
         response = super().to_representation(instance)
-        response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
+        # response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
+        response['user_name'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data['first_name']
         return response
     
     
@@ -32,7 +33,7 @@ class EducationSerializer(serializers.ModelSerializer):
         
     def to_representation(self,instance):
         response = super().to_representation(instance)
-        response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
+        response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data['id']
         return response
 
 
@@ -124,5 +125,7 @@ class SocialProfileSerializer(serializers.ModelSerializer):
         
     def to_representation(self,instance):
         response = super().to_representation(instance)
-        response['user'] = SkillSerializer(instance.user, context = {'request': self.context.get('request')}).data
+        # response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
+        response['current_work_organization'] = WorkExperienceSerializer(instance.current_work_organization, context = {'request': self.context.get('request')}).data['organization_name']
+        response['current_academic_organization'] = EducationSerializer(instance.current_academic_organization, context = {'request': self.context.get('request')}).data['organization_name']
         return response

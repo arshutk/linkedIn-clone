@@ -68,7 +68,7 @@ class ConnectionSenderView(views.APIView):
         sender       = request.user.profile 
         
         try:
-            if receiver.connections.get(sender = sender) and not receiver.connections.get(sender = sender).has_been_accepted:
+            if receiver.connection_request_received.get(sender = sender) and not receiver.connection_request_received.get(sender = sender).has_been_accepted:
                 return Response({'detail': "You have already sent a request. Wait for it to get accepted."}, status=status.HTTP_406_NOT_ACCEPTABLE)
             return Response({'detail': "Already connected."}, status=status.HTTP_406_NOT_ACCEPTABLE)
         except:

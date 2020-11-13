@@ -6,7 +6,7 @@ from userauth.serializers import UserSerializer, UserProfileSerializer, MyTokenO
 
 from userauth.models import User, UserProfile, OTPModel
 
-from profile.models import WorkExperience, Education
+from profile.models import WorkExperience, Education, SocialProfile
 
 from profile.serializers import WorkExperienceSerializer, EducationSerializer, SocialProfileSerializer
 
@@ -105,6 +105,24 @@ class UserProfileCreateView(views.APIView):
 
 ########################do bar post ho rha
     serializer_class = UserProfileSerializer
+    
+    def get_user(self, profile_id):
+        try:
+            return UserProfile.objects.get(id = profile_id)
+        except:
+            raise Http404
+    
+    def get_work_experience(self, work_id):
+        try:
+            return WorkExperience.objects.get(id = work_id)
+        except:
+            raise Http404
+        
+    def get_academic_experience(self, academic_id):
+        try:
+            return Education.objects.get(id = academic_id)
+        except:
+            raise Http404
         
     def post(self, request, user_id):
         data = request.data.copy()
@@ -126,12 +144,11 @@ class UserProfileCreateView(views.APIView):
                 job_serializer  = WorkExperienceSerializer(data = job_data, context = {'request': request})
                 if job_serializer.is_valid():
                     job_serializer.save()
-                    profile_serializer  = SocialProfileSerializer(data = {'user': study_serializer.data['user']['id']}, context = {'request': request})
-                    if profile_serializer.is_valid():
-                        profile_serializer.save()
-                        return Response(serializer.data, status = status.HTTP_201_CREATED)
-                    return Response(profile_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-                return Response(job_serializer.errors, status = status.HTTP_201_CREATED)
+                    SocialProfile.objects.create(user = self.get_user(serializer.data['id']), 
+                                                 headline = f"{serializer.data['position']} at {serializer.data['organization_name']}",
+                                                 current_work_organization = self.get_work_experience(job_serializer.data['id']))
+                    return Response(serializer.data, status = status.HTTP_201_CREATED)
+                return Response(job_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
             
             study_data = dict()
             study_data['user'] = serializer.data['id']
@@ -144,11 +161,10 @@ class UserProfileCreateView(views.APIView):
             study_serializer  = EducationSerializer(data = study_data, context = {'request': request})
             if study_serializer.is_valid():
                 study_serializer.save()
-                profile_serializer  = SocialProfileSerializer(data = {'user': study_serializer.data['user']['id']}, context = {'request': request})
-                if profile_serializer.is_valid():
-                    profile_serializer.save()
-                    return Response(serializer.data, status = status.HTTP_201_CREATED)
-                return Response(profile_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+                SocialProfile.objects.create(user = self.get_user(serializer.data['id']), 
+                                             headline = f"{serializer.data['position']} at {serializer.data['organization_name']}",
+                                             current_academic_organization = self.get_academic_experience(study_serializer.data['id']))
+                return Response(serializer.data, status = status.HTTP_201_CREATED)
             return Response(study_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
         
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
