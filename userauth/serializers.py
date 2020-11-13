@@ -96,7 +96,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         
     def to_representation(self,instance):
         response = super().to_representation(instance)
-        response['user'] = UserSerializer(instance.user, context = {'request': self.context.get('request')}).data
+        response['user'] = UserSerializer(instance.user, context = {'request': self.context.get('request')}).data['id']
         return response
    
    

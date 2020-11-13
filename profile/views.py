@@ -1,5 +1,6 @@
 from django.shortcuts import render
 
+
 from profile.models import  WorkExperience, Education, LicenseAndCertification, VolunteerExperience, Course, Project, TestScore, \
                             Skill, SocialProfile
 
@@ -20,6 +21,8 @@ from rest_framework.response import Response
 import json
 
 from userauth.models import UserProfile
+
+from userauth.serializers import UserProfileSerializer
 
 from django.http import Http404
 
@@ -250,12 +253,7 @@ class SkillsViewset(viewsets.ModelViewSet):
             permission_classes = [IsAdminUser]
         return [permission() for permission in permission_classes] 
 
-    
 
-#  {
-#                  "top_skills": ["Django", "Java"]
-
-# }
 
 class GetWorkView(views.APIView):
     
@@ -268,7 +266,7 @@ class GetWorkView(views.APIView):
             serializer = WorkExperienceSerializer(work_experience, many = True, context = {'request':request})
             return Response(serializer.data, status = status.HTTP_200_OK)
         except:
-            return Response({'detail':'No work experience yet'}, status = status.HTTP_200_OK)
+            return Response({'detail':'No work experience yet'}, status = status.HTTP_400_BAD_REQUEST)
         
         
 class GetAcademicView(views.APIView):
@@ -282,7 +280,7 @@ class GetAcademicView(views.APIView):
             serializer = EducationSerializer(academic_experience, many = True, context = {'request':request})
             return Response(serializer.data, status = status.HTTP_200_OK)
         except:
-            return Response({'detail':'No work experience yet'}, status = status.HTTP_200_OK)
+            return Response({'detail':'No academic experience yet'}, status = status.HTTP_400_BAD_REQUEST)
              
 
 class ProfileStrengthView(views.APIView):
@@ -391,9 +389,11 @@ class BasicInfoView(views.APIView):
             
         first_name          = user.first_name
         last_name           = user.last_name 
+        location            = user.location
         headline            = user.social_profile.headline.split()
-        position            = f'{headline[0]} {headline[1]}' 
-        organization        = headline[2]       
+        pos                 = headline.index("at")
+        position            = ' '.join(headline[:pos])
+        organization        = ' '.join(headline[pos + 1:])        
         connection          = Connection.objects.filter(sender = user, has_been_accepted = True).count() + \
                               Connection.objects.filter(receiver = user, has_been_accepted = True).count()
         profile_views       = 0
@@ -409,20 +409,78 @@ class BasicInfoView(views.APIView):
             else:
                 experience  = [work_experience.organization_name]
         else:
-            experience  = [academic_experience.organization_name]
+            experience      = [academic_experience.organization_name]
 
-            
+        about               = user.social_profile.bio
+        
         return Response({'avatar':avatar,
                          'first_name':first_name, 
                          'last_name':last_name, 
+                         'location':location,
                          'position':position, 
                          'organization':organization, 
                          'organization':organization, 
                          'experience':experience, 
                          'connection':connection, 
                          'profile_views':profile_views, 
-                         'bookmarked_posts':bookmarked_posts}, 
+                         'bookmarked_posts':bookmarked_posts, 
+                         'about':about}, 
                           status = status.HTTP_200_OK)
         
+class UserProfileUpdate(views.APIView):
+    
+    def patch(self, request, profile_id):
         
+        user = UserProfile.objects.get(id = profile_id)
         
+        data = request.data.copy()
+        
+        serializer = UserProfileSerializer(user, data = data, partial = True, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status = status.HTTP_200_OK)
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        
+# class SocialProfileUpdate(views.APIView):
+    
+#     def patch(self, request, profile_id):
+        
+#         social_profile = UserProfile.objects.get(id = profile_id).social_profile
+        
+#         data = request.data.copy()
+        
+#         serializer = SocialProfileSerializer(social_profile, data = data, partial = True, context={'request': request})
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status = status.HTTP_200_OK)
+#         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        
+                
+# Headline Update
+# http://localhost:8000/user/profile/update/social/<profile_id>
+# Request:
+# {
+#     "headline": "Peon at School"
+# }
+
+
+# Method: PATCH
+# Status Code : 200
+
+# Response
+# {
+#     "id": 1,
+#     "bio": "YOYOsss",
+#     "headline": "Peon at School",
+#     "background_photo": null,
+#     "dob": null,
+#     "profile_url": "",
+#     "user": 3,
+#     "current_work_organization": "",
+#     "current_academic_organization": "AKGEC"
+# }
+ 
+# Isse tmhare vo banner me jo organisation and position aa rha h na vo iske according update ho jaega
+
+
+

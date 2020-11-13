@@ -28,5 +28,7 @@ urlpatterns = [
     path('brief_info/', views.BasicInfoView.as_view()),
     path('get_work/', views.GetWorkView.as_view()),
     path('get_academic/', views.GetAcademicView.as_view()),
+    path('update/<int:profile_id>/', views.UserProfileUpdate.as_view()),
+    # path('update/social/<int:profile_id>/', views.SocialProfileUpdate.as_view()),
     
 ] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

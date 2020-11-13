@@ -16,6 +16,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 admin.site.site_header   = 'LinkedIn Clone'
 admin.site.site_title    = 'LinkedIn Administrator'
 admin.site.index_title   = 'Administrator'
@@ -27,4 +30,4 @@ urlpatterns = [
     path('user/network/', include('network.urls')),
     path('user/organization/', include('organization.urls')),
     path('user/post/', include('post.urls')),
-]
+] + static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)

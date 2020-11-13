@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from post.models import Post, Vote, Upvoter, Downvoter
+from post.models import Post, Like, Celebrate, Support, Love, Insightful, Curious
 
 from userauth.models import User, UserProfile
 
@@ -15,33 +15,44 @@ class PostSerializer(serializers.ModelSerializer):
         
     def to_representation(self,instance):
         response = super().to_representation(instance)
-        response['written_by'] = UserProfileSerializer(instance.written_by, context = {'request': self.context.get('request')}).data
+        response['written_by'] = UserProfileSerializer(instance.written_by, context = {'request': self.context.get('request')}).data['id']
         return response
     
     
-class VoteSerializer(serializers.ModelSerializer):
+class LikeSerializer(serializers.ModelSerializer):
     
     class Meta:
-        model   = Vote
+        model   = Like
+        fields  = '__all__'
+
+class CelebrateSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model   = Celebrate
         fields  = '__all__'
         
-    def to_representation(self,instance):
-        response = super().to_representation(instance)
-        response['post'] = PostSerializer(instance.post, context = {'request': self.context.get('request')}).data
-        return response
-    
-class UpvoterSerializer(serializers.ModelSerializer):
+        
+class SupportSerializer(serializers.ModelSerializer):
     
     class Meta:
-        model   = Upvoter
+        model   = Support
         fields  = '__all__'
         
-    
-class DownvoterSerializer(serializers.ModelSerializer):
+class LoveSerializer(serializers.ModelSerializer):
     
     class Meta:
-        model   = Downvoter
+        model   = Love
         fields  = '__all__'
+        
+class InsightfulSerializer(serializers.ModelSerializer):
     
+    class Meta:
+        model   = Insightful
+        fields  = '__all__'
+        
+class CuriousSerializer(serializers.ModelSerializer):
     
-    
+    class Meta:
+        model   = Curious
+        fields  = '__all__'
+        
