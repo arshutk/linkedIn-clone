@@ -6,6 +6,8 @@ import datetime
 
 from organization.models import Organization 
 
+from django.db.models import F
+
 # - => Descending
 
 # Background
@@ -23,8 +25,7 @@ class WorkExperience(models.Model):
     class Meta:
         verbose_name = 'Work Experience'
         verbose_name_plural = 'Work Experiences'
-        ordering = ('-start_date',)
-
+        ordering = ('end_date','start_date', '-id') # 2019 < 2020
 
 class Education(models.Model):
      
@@ -183,7 +184,11 @@ SKILLS = (    ('Tools & Technology', (('C++', 'C++'), ('Python', 'Python'), ('Dj
 class Skill(models.Model):
 
     user                = models.OneToOneField(UserProfile, on_delete = models.CASCADE, related_name ='skills')
-    skills_list         = MultiSelectField(choices = SKILLS, max_length = 300)
+    # skills_list         = MultiSelectField(choices = SKILLS, max_length = 300, null = True, blank = True) 
+    
+    # Temporary
+    skills_list         = models.TextField()
+    
     top_skills          = models.TextField(blank = True, null = True)
 
     def __str__(self):
@@ -192,19 +197,19 @@ class Skill(models.Model):
     class Meta:
         verbose_name = 'Skill'
         verbose_name_plural = 'Skills'
-        
-    
+ 
     
 class SocialProfile(models.Model):
     user                            = models.OneToOneField(UserProfile, on_delete = models.CASCADE, related_name ='social_profile')
     
     bio                             = models.TextField(blank = True, null = True)
-    headline                        = models.CharField(max_length = 60, blank = True, null = True)
+    tagline                         = models.CharField(max_length = 60, blank = True, null = True)
     background_photo                = models.ImageField(upload_to = 'background/', blank = True, null = True, max_length = 1048576)
     dob                             = models.DateField(blank = True, null = True, default = None)
     profile_url                     = models.TextField(blank = True, null = True)
-    current_work_organization       = models.OneToOneField(WorkExperience, blank = True, null = True, on_delete = models.SET_NULL, default = None, related_name ='current_work')
-    current_academic_organization   = models.OneToOneField(Education, blank = True, null = True,on_delete = models.SET_NULL, default = None, related_name ='current_academic')
+    
+    current_industry                = models.OneToOneField(WorkExperience, blank = True, null = True, on_delete = models.SET_NULL, default = None, related_name ='current_work')
+    current_academia                = models.OneToOneField(Education, blank = True, null = True,on_delete = models.SET_NULL, default = None, related_name ='current_academic')
     
     
     def __str__(self):

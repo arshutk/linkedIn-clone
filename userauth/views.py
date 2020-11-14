@@ -103,7 +103,6 @@ class UserCreateView(views.APIView):
 class UserProfileCreateView(views.APIView):
     permission_classes = [AllowAny]
 
-########################do bar post ho rha
     serializer_class = UserProfileSerializer
     
     def get_user(self, profile_id):
@@ -112,15 +111,15 @@ class UserProfileCreateView(views.APIView):
         except:
             raise Http404
     
-    def get_work_experience(self, work_id):
+    def get_industry(self, profile_id):
         try:
-            return WorkExperience.objects.get(id = work_id)
+            return WorkExperience.objects.get(user = profile_id)
         except:
             raise Http404
         
-    def get_academic_experience(self, academic_id):
+    def get_academia(self, profile_id):
         try:
-            return Education.objects.get(id = academic_id)
+            return Education.objects.get(user = profile_id)
         except:
             raise Http404
         
@@ -129,45 +128,29 @@ class UserProfileCreateView(views.APIView):
         data['user'] = user_id
 
         serializer = UserProfileSerializer(data = data, context={'request': request})
-        if serializer.is_valid():
+        if serializer.is_valid(): 
             serializer.save()
             if data.get('is_employed'):
-                job_data = dict()
-                job_data['user'] = serializer.data['id']
-                job_data['organization_name'] = data['organization_name']
-                job_data['position'] = data['position']
-                try:
-                    job_data['start_date'] = data['start_date']
-                except:
-                    pass
-                job_data['end_date'] = data.get('end_date')
-                job_serializer  = WorkExperienceSerializer(data = job_data, context = {'request': request})
-                if job_serializer.is_valid():
-                    job_serializer.save()
-                    SocialProfile.objects.create(user = self.get_user(serializer.data['id']), 
-                                                 headline = f"{serializer.data['position']} at {serializer.data['organization_name']}",
-                                                 current_work_organization = self.get_work_experience(job_serializer.data['id']))
-                    return Response(serializer.data, status = status.HTTP_201_CREATED)
-                return Response(job_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-            
-            study_data = dict()
-            study_data['user'] = serializer.data['id']
-            study_data['organization_name'] = data['organization_name']
-            try:
-                    job_data['start_date'] = data['start_date']
-            except:
-                pass
-            study_data['end_date'] = data.get('end_date')
-            study_serializer  = EducationSerializer(data = study_data, context = {'request': request})
-            if study_serializer.is_valid():
-                study_serializer.save()
+                WorkExperience.objects.create(user = self.get_user(serializer.data['id']), 
+                                             organization_name = f"{data['organization_name']}", 
+                                             position = data['position'], 
+                                             start_date = data['start_date'], 
+                                             end_date = data['end_date'])
+                
                 SocialProfile.objects.create(user = self.get_user(serializer.data['id']), 
-                                             headline = f"{serializer.data['position']} at {serializer.data['organization_name']}",
-                                             current_academic_organization = self.get_academic_experience(study_serializer.data['id']))
+                                                tagline = f"{data['position']} at {data['organization_name']}",
+                                                current_industry = self.get_industry(serializer.data['id']))                                  
                 return Response(serializer.data, status = status.HTTP_201_CREATED)
-            return Response(study_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-        
-        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+            Education.objects.create(user = self.get_user(serializer.data['id']), 
+                                             organization_name = f"{data['organization_name']}",
+                                             start_date = data['start_date'],
+                                             end_date = data['end_date'])
+                                             
+            SocialProfile.objects.create(user = self.get_user(serializer.data['id']), 
+                                            tagline = f"{data['position']} at {data['organization_name']}",
+                                            current_academia = self.get_academia(serializer.data['id']))
+            return Response(serializer.data, status = status.HTTP_201_CREATED)
+        return Response(serializer.errors, status = status.HTTP_201_CREATED)
     
     
     def patch(self, request, user_id = None):

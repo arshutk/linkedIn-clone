@@ -97,15 +97,9 @@ class UserProfile(models.Model):
     location            = models.CharField(max_length = 50)
     phone_number        = models.CharField(max_length = 10, blank = True)
     
-    organization_name   = models.CharField(max_length = 50)
-    position            = models.CharField(max_length = 50)
-    start_date          = models.DateField(default = datetime.date.today) # yyyy-mm-dd
-    end_date            = models.DateField(blank = True, null = True, default = None)
     is_online           = models.BooleanField(default = False)
     
-    followers            = models.ManyToManyField('self', related_name ='followers', blank = True)
-    
-    
+    followers           = models.ManyToManyField('self', related_name ='followers', blank = True)
     
     def __str__(self):
         return f'{self.first_name} {self.last_name}'

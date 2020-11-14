@@ -13,7 +13,6 @@ from rest_framework import status
 from network.models import Connection
 
 
-
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         request = self.context["request"].data
@@ -47,12 +46,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
                     data.update({'avatar': None})
                 data.update({'first_name': self.user.profile.first_name})
                 data.update({'last_name': self.user.profile.last_name})
-                headline            = self.user.profile.social_profile.headline.split()
-                pos                 = headline.index("at")
-                position            = ' '.join(headline[:pos])
-                organization        = ' '.join(headline[pos + 1:])  
-                data.update({'position': position})
-                data.update({'organization': organization})
+                data.update({'tagline': self.user.profile.social_profile.tagline})
                 data.update({'connection': self.user.profile.last_name})
                 connection          = Connection.objects.filter(sender = self.user.profile, has_been_accepted = True).count() + \
                                       Connection.objects.filter(receiver = self.user.profile, has_been_accepted = True).count()
@@ -96,7 +90,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         
     def to_representation(self,instance):
         response = super().to_representation(instance)
-        response['user'] = UserSerializer(instance.user, context = {'request': self.context.get('request')}).data['id']
+        response['user'] = UserSerializer(instance.user, context = {'request': self.context.get('request')}).data
         return response
    
    

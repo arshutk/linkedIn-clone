@@ -16,7 +16,8 @@ class WorkExperienceSerializer(serializers.ModelSerializer):
     class Meta:
         model   = WorkExperience
         fields  = '__all__'
-        
+        # read_only_fields = ('user',)     
+           
     def to_representation(self,instance):
         response = super().to_representation(instance)
         response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data['id']
@@ -29,7 +30,8 @@ class EducationSerializer(serializers.ModelSerializer):
     class Meta:
         model   = Education
         fields  = '__all__'
-        
+        read_only_fields = ('user',)  
+              
     def to_representation(self,instance):
         response = super().to_representation(instance)
         response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data['id']
@@ -42,7 +44,8 @@ class LicenseAndCertificationSerializer(serializers.ModelSerializer):
     class Meta:
         model   = LicenseAndCertification
         fields  = '__all__'
-        
+        read_only_fields = ('user',)      
+          
     def to_representation(self,instance):
         response = super().to_representation(instance)
         response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
@@ -54,7 +57,8 @@ class VolunteerExperienceSerializer(serializers.ModelSerializer):
     class Meta:
         model   = VolunteerExperience
         fields  = '__all__'
-        
+        read_only_fields = ('user',)   
+             
     def to_representation(self,instance):
         response = super().to_representation(instance)
         response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
@@ -67,7 +71,8 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model   = Course
         fields  = '__all__'
-        
+        read_only_fields = ('user',)  
+              
     def to_representation(self,instance):
         response = super().to_representation(instance)
         response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
@@ -79,7 +84,8 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model   = Project
         fields  = '__all__'
-        
+        read_only_fields = ('user',)  
+              
     def to_representation(self,instance):
         response = super().to_representation(instance)
         response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
@@ -91,7 +97,8 @@ class TestScoreSerializer(serializers.ModelSerializer):
     class Meta:
         model   = TestScore
         fields  = '__all__'
-        
+        read_only_fields = ('user',)  
+              
     def to_representation(self,instance):
         response = super().to_representation(instance)
         response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
@@ -102,17 +109,18 @@ class TestScoreSerializer(serializers.ModelSerializer):
 from profile.models import SKILLS
 class SkillSerializer(serializers.ModelSerializer):
     
-    skills_list        = fields.MultipleChoiceField(choices = SKILLS)
-    
+    # skills_list        = fields.MultipleChoiceField(choices = SKILLS)   
     
     class Meta:
         model   = Skill
         fields  = '__all__'
-        
+              
     def to_representation(self,instance):
         response = super().to_representation(instance)
         response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data['id']
         response['top_skills'] = json.decoder.JSONDecoder().decode(instance.top_skills)
+        # Temporary (remove later)
+        response['skills_list'] = json.decoder.JSONDecoder().decode(instance.skills_list)
         return response
     
     
@@ -121,10 +129,11 @@ class SocialProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model   = SocialProfile
         fields  = '__all__'
+        read_only_fields = ('user',)
         
     def to_representation(self,instance):
         response = super().to_representation(instance)
         # response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
-        response['current_work_organization'] = WorkExperienceSerializer(instance.current_work_organization, context = {'request': self.context.get('request')}).data['organization_name']
-        response['current_academic_organization'] = EducationSerializer(instance.current_academic_organization, context = {'request': self.context.get('request')}).data['organization_name']
+        response['current_industry'] = WorkExperienceSerializer(instance.current_industry, context = {'request': self.context.get('request')}).data['organization_name']
+        response['current_academia'] = EducationSerializer(instance.current_academia, context = {'request': self.context.get('request')}).data['organization_name']
         return response

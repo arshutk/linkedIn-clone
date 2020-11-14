@@ -28,26 +28,68 @@ from django.http import Http404
 
 from network.models import Connection
 
+from django.contrib.contenttypes.models import ContentType
 
-class SocialProfileView(viewsets.ModelViewSet):
-    
-    queryset = SocialProfile.objects.all()
-    serializer_class = SocialProfileSerializer
-    
-    def get_permissions(self):
-        permission_classes = []
-        if self.action == 'create':
-            permission_classes = [IsAuthenticated]
-        elif self.action == 'retrieve' or self.action == 'update' or self.action == 'partial_update' or self.action == 'destroy':
-            permission_classes = [IsAuthenticatedAndOwner]
-        elif self.action == 'list':
-            permission_classes = []
-        return [permission() for permission in permission_classes]
 
-class WorkExperienceViewset(viewsets.ModelViewSet):
+class SocialProfileView(views.APIView):
+
+    def get(self, request):
+        
+        queryset = SocialProfile.objects.all()
+        serialzer = SocialProfileSerializer(queryset, many = True, context = {'request':request})
+        return Response(serialzer.data, status = status.HTTP_200_OK)
+        
+
+class WorkExperienceViewset(viewsets.ViewSet):
     
     queryset = WorkExperience.objects.all()
     serializer_class = WorkExperienceSerializer
+    
+    def create(self, request):
+        
+        profile_id       = request.data.get('user')
+        update_tagline   = request.data.get('update_tagline')
+        
+        social_profile   = UserProfile.objects.get(id = profile_id).social_profile
+        
+        if update_tagline:   
+            serializer = WorkExperienceSerializer(data = request.data, context = {'request':request})
+            if serializer.is_valid():
+                serializer.save()
+                print(social_profile.tagline)
+                social_profile.tagline = f"{serializer.data['position']} at {serializer.data['organization_name']}"
+                print(social_profile.tagline)
+                social_profile.save()
+                print(social_profile.tagline)
+                return Response(serializer.data, status = status.HTTP_201_CREATED)
+            return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        serializer = WorkExperienceSerializer(data = request.data, context = {'request':request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status = status.HTTP_201_CREATED)
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+    
+    def update(self, request, pk):
+        
+        instance       = WorkExperience.objects.get('pk')
+        social_profile = request.data.user.social_profile
+        update_tagline = request.data.get('update_tagline')
+        
+        if update_tagline:   
+            serializer = WorkExperienceSerializer(instance, data = request.data, context = {'request':request})
+            if serializer.is_valid():
+                serializer.save()
+                social_profile.tagline = f"{serializer.data['position']} at {serializer.data['organization_name']}"
+                social_profile.save()
+                return Response(serializer.data, status = status.HTTP_201_CREATED)
+            return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        serializer = WorkExperienceSerializer(instance, data = request.data, context = {'request':request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status = status.HTTP_201_CREATED)
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+    
+    
     
     def get_permissions(self):
         permission_classes = []
@@ -160,49 +202,65 @@ class TestScoreViewset(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
     
 
-
-class SkillsViewset(viewsets.ModelViewSet):
+class SkillView(views.APIView):
     
-    queryset = Skill.objects.all()
-    serializer_class = SkillSerializer
+    def get(self, request):
+        try:
+            request.user.profile.skills
+        except:
+            raise Http404
+        
+        user  = request.user.profile
+        query = user.skills  
+        serializer = SkillSerializer(query, context = {'request': request})
+        return Response(serializer.data, status = status.HTTP_200_OK)
     
-    def create(self, request):
+        
+    def post(self, request):
         data            = request.data.copy()
         skills          = request.data.get('skills_list')
-        
         
         if skills:
             if len(skills) <= 3:
                 data['top_skills'] = json.dumps(skills)
+                data['skills_list'] = json.dumps(skills)
                 serializer = SkillSerializer(data = data, context={'request': request})
                 if serializer.is_valid():
                     serializer.save()
                     return Response(serializer.data, status = status.HTTP_201_CREATED)
                 return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
             data['top_skills'] = json.dumps(skills[:3])
+            data['skills_list'] = json.dumps(skills)
             serializer = SkillSerializer(data = data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status = status.HTTP_201_CREATED)
             return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
         return Response({'detail':'Skills list must not be empty.'}, status = status.HTTP_400_BAD_REQUEST)
-    
-    def update(self, request, pk):
+
+class SkillUpdateView(views.APIView):
+
+    def put(self, request, skill_id):
+        
         data            = request.data.copy()
         skills_list     = data.get('skills_list')
         
-        skills          = Skill.objects.get(pk = pk)
-        
+        try:
+            skills          = Skill.objects.get(pk = skill_id)
+        except:
+            raise Http404
         
         if skills:
             if len(skills_list) <= 3:
                 data['top_skills'] = json.dumps(skills_list)
+                data['skills_list'] = json.dumps(skills_list)
                 serializer = SkillSerializer(skills, data = data, context={'request': request})
                 if serializer.is_valid():
                     serializer.save()
                     return Response(serializer.data, status = status.HTTP_201_CREATED)
                 return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
             data['top_skills'] = json.dumps(skills_list[:3])
+            data['skills_list'] = json.dumps(skills_list)
             serializer = SkillSerializer(skills, data = data, context={'request': request})
             if serializer.is_valid():
                 serializer.save()
@@ -211,48 +269,48 @@ class SkillsViewset(viewsets.ModelViewSet):
         return Response({'detail':'Skills list must not be empty.'}, status = status.HTTP_400_BAD_REQUEST)
     
     
-    def partial_update(self, request, pk):
+    def patch(self, request, skill_id):
         
         top_skills = request.data.get('top_skills')
         
-        skills = Skill.objects.get(pk = pk)
+        try:
+            skills = Skill.objects.get(id = skill_id)
+        except:
+            raise Http404
         
+        skills_list = json.decoder.JSONDecoder().decode(skills.skills_list)
+        print(skills_list)
         
-        if top_skills:
-            if len(top_skills) <= 3:
-                if len(top_skills) == 3:
-                    top_skills = json.dumps(top_skills)
-                    serializer = SkillSerializer(skills, data = {'top_skills':top_skills}, partial=True, context={'request': request})
+        if set(top_skills).issubset(set(skills_list)):
+            if top_skills:
+                if len(top_skills) <= 3:
+                    if len(top_skills) == 3:
+                        top_skills = json.dumps(top_skills)
+                        serializer = SkillSerializer(skills, data = {'top_skills':top_skills}, partial=True, context={'request': request})
+                        if serializer.is_valid():
+                            serializer.save()
+                            return Response(serializer.data, status = status.HTTP_200_OK)
+                        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+                    for skill in json.decoder.JSONDecoder().decode(skills.top_skills):
+                        if skill in top_skills:
+                            continue
+                        top_skills.append(skill)
+                        if len(top_skills) == 3:
+                            top_skills = json.dumps(top_skills)
+                            break     
+                    serializer = SkillSerializer(skills, data = {'top_skills': top_skills}, partial = True, context={'request': request})
                     if serializer.is_valid():
                         serializer.save()
                         return Response(serializer.data, status = status.HTTP_200_OK)
                     return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-                for skill in json.decoder.JSONDecoder().decode(skills.top_skills):
-                    if skill in top_skills:
-                        continue
-                    top_skills.append(skill)
-                    if len(top_skills) == 3:
-                        top_skills = json.dumps(top_skills)
-                        break         
-                serializer = SkillSerializer(skills, data = {'top_skills': top_skills}, partial = True, context={'request': request})
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response(serializer.data, status = status.HTTP_200_OK)
-                return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-            return Response({'detail':'Please select only top three skills to feature.'}, status = status.HTTP_400_BAD_REQUEST)   
-        return Response({'detail':'Featured Skills list has not been changed.'}, status = status.HTTP_304_NOT_MODIFIED)   
-                
+                return Response({'detail':'Please select only top three skills to feature.'}, status = status.HTTP_400_BAD_REQUEST)   
+            return Response({'detail':'Featured Skills list has not been changed.'}, status = status.HTTP_304_NOT_MODIFIED)
+        return Response({'detail':'Some skill/s in featured list is/are not in added skill.'}, status = status.HTTP_304_NOT_MODIFIED)
     
-    def get_permissions(self):
-        permission_classes = []
-        if self.action == 'create':
-            permission_classes = [IsAuthenticated]
-        elif self.action == 'retrieve' or self.action == 'update' or self.action == 'partial_update' or self.action == 'destroy':
-            permission_classes = [IsAuthenticatedAndOwner]
-        elif self.action == 'list':
-            permission_classes = [IsAdminUser]
-        return [permission() for permission in permission_classes] 
-
+    
+    def delete(self, request, skill_id):
+        Skill.objects.get(id = skill_id).delete()
+        return Response({'detail':'Deleted'}, status = status.HTTP_204_NO_CONTENT)
 
 
 class GetWorkView(views.APIView):
@@ -389,25 +447,21 @@ class BasicInfoView(views.APIView):
         first_name          = user.first_name
         last_name           = user.last_name 
         location            = user.location
-        headline            = user.social_profile.headline.split()
-        pos                 = headline.index("at")
-        position            = ' '.join(headline[:pos])
-        organization        = ' '.join(headline[pos + 1:])        
+        tagline             = user.social_profile.tagline
         connection          = Connection.objects.filter(sender = user, has_been_accepted = True).count() + \
                               Connection.objects.filter(receiver = user, has_been_accepted = True).count()
         profile_views       = 0
         bookmarked_posts    = user.bookmarked_posts.count()
         
         try:
-            work_experience     = user.social_profile.current_work_organization
+            work_experience     = user.social_profile.current_industry
         except:
             work_experience     = None
         
         try:
-            academic_experience = user.social_profile.current_academic_organization
+            academic_experience = user.social_profile.current_academia
         except:
             academic_experience = None
-        
         
         if work_experience:
             if academic_experience:
@@ -416,7 +470,8 @@ class BasicInfoView(views.APIView):
         else:
             if academic_experience:
                 experience      = [academic_experience.organization_name]
-            experience      = []
+            else:
+                experience      = []
 
         about               = user.social_profile.bio
         
@@ -424,15 +479,14 @@ class BasicInfoView(views.APIView):
                          'first_name':first_name, 
                          'last_name':last_name, 
                          'location':location,
-                         'position':position, 
-                         'organization':organization, 
-                         'organization':organization, 
+                         'tagline':tagline, 
                          'experience':experience, 
                          'connection':connection, 
                          'profile_views':profile_views, 
                          'bookmarked_posts':bookmarked_posts, 
                          'about':about}, 
                           status = status.HTTP_200_OK)
+        
         
 class UserProfileUpdate(views.APIView):
     
@@ -442,52 +496,78 @@ class UserProfileUpdate(views.APIView):
         
         data = request.data.copy()
         
+        try: 
+            del data['phone_number']
+        except:
+            pass
+        
         serializer = UserProfileSerializer(user, data = data, partial = True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status = status.HTTP_200_OK)
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
         
-# class SocialProfileUpdate(views.APIView):
+     
+        
+class SocialProfileUpdate(views.APIView):
     
-#     def patch(self, request, profile_id):
+    def patch(self, request, profile_id):
         
-#         social_profile = UserProfile.objects.get(id = profile_id).social_profile
+        social_profile = UserProfile.objects.get(id = profile_id).social_profile
         
-#         data = request.data.copy()
+        data = request.data.copy()
         
-#         serializer = SocialProfileSerializer(social_profile, data = data, partial = True, context={'request': request})
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data, status = status.HTTP_200_OK)
-#         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        try: 
+            del data['current_industry']
+        except:
+            pass
+        
+        try: 
+            del data['current_academia']
+        except:
+            pass
+        
+        serializer = SocialProfileSerializer(social_profile, data = data, partial = True, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status = status.HTTP_200_OK)
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+   
+   
+    
+class BannerUpdateView(views.APIView):
+    
+    def put(self, request, profile_id):
+        
+        user    = UserProfile.objects.get(id = profile_id)       
+        data    = request.data.copy()
+        
+        try: 
+            del data['current_industry']
+        except:
+            pass
+        
+        try: 
+            del data['current_academia']
+        except:
+            pass
+        
+        try: 
+            del data['phone_number']
+        except:
+            pass
+        
+        profile_serializer = UserProfileSerializer(user, data = data, partial = True, context={'request': request})
+        if profile_serializer.is_valid():
+            profile_serializer.save()
+            banner_serializer = SocialProfileSerializer(user.social_profile, data = data, partial = True, context={'request': request})
+            if banner_serializer.is_valid():
+                banner_serializer.save()
+                data = {**profile_serializer.data, **banner_serializer.data}
+                return Response(data, status = status.HTTP_202_ACCEPTED)
+            return Response(banner_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
         
                 
-# Headline Update
-# http://localhost:8000/user/profile/update/social/<profile_id>
-# Request:
-# {
-#     "headline": "Peon at School"
-# }
-
-
-# Method: PATCH
-# Status Code : 200
-
-# Response
-# {
-#     "id": 1,
-#     "bio": "YOYOsss",
-#     "headline": "Peon at School",
-#     "background_photo": null,
-#     "dob": null,
-#     "profile_url": "",
-#     "user": 3,
-#     "current_work_organization": "",
-#     "current_academic_organization": "AKGEC"
-# }
- 
-# Isse tmhare vo banner me jo organisation and position aa rha h na vo iske according update ho jaega
-
 
 

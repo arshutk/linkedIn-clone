@@ -24,6 +24,8 @@ class Post(models.Model):
    def __str__(self):
       return f'{self.written_by.first_name} {self.written_by.last_name} : {self.text[:30]}'
     
+   class Meta:
+      ordering = ('-posted_at',)
    
 class Vote(models.Model):
    CHOICE = (  

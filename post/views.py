@@ -16,6 +16,8 @@ from django.http import Http404
 
 from userauth.models import UserProfile
 
+from datetime import datetime, timedelta, timezone
+
 
 class PostView(generics.ListCreateAPIView):
 
@@ -146,6 +148,19 @@ class GetBookmarks(views.APIView):
         forum = PostSerializer(user.bookmarked_posts.all(), many = True, context = {'request':request})
         return Response(forum.data, status = status.HTTP_200_OK)
     
-        
-            
-            
+
+class TrendingPostsView(views.APIView):
+
+#     time_threshold  = datetime.now().replace(tzinfo=timezone.utc) - timedelta(hours = 5)      
+#     posts           = Post.objects.filter(posted_at__gt=time_threshold)      
+# # Post.objects.filter(posted_at__gte=datetime.date(2011, 1, 1),posted_at__lte=datetime.date(2011, 1, 31))
+
+
+# datetime.datetime(2020, 11, 13, 23, 1, 25, 838813, tzinfo=<UTC>)
+# datetime.datetime(2020, 11, 13, 22, 37, 17, 361020, tzinfo=<UTC>)
+
+# datetime.datetime(2020, 11, 13, 17, 29, 58, 97323, tzinfo=<UTC>)
+
+# datetime.datetime(2020, 11, 13, 16, 57, 33, 11162, tzinfo=<UTC>)
+    pass
+
