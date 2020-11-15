@@ -33,9 +33,27 @@ class PostView(generics.ListCreateAPIView):
     def post(self, request):
         data = request.data
         data['written_by'] = request.user.profile.id
+        
+        # remove later
+        media_type         = request.data.get('media_type')
+        if media_type:
+            if media_type == 'img':
+                data['image_linked'] = data['media']
+                serializer = PostSerializer(data = data, context = {'request': request})
+                if serializer.is_valid():
+                    serializer.save()  
+                    return Response(serializer.data, status = status.HTTP_201_CREATED)
+                return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+            data['video_linked'] = data['media']
+            serializer = PostSerializer(data = data, context = {'request': request})
+            if serializer.is_valid():
+                serializer.save()  
+                return Response(serializer.data, status = status.HTTP_201_CREATED)
+            return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        # here
+        
         serializer = PostSerializer(data = data, context = {'request': request})
         if serializer.is_valid():
-            print(serializer.validated_data)
             serializer.save()  
             return Response(serializer.data, status = status.HTTP_201_CREATED)
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
@@ -150,17 +168,5 @@ class GetBookmarks(views.APIView):
     
 
 class TrendingPostsView(views.APIView):
-
-#     time_threshold  = datetime.now().replace(tzinfo=timezone.utc) - timedelta(hours = 5)      
-#     posts           = Post.objects.filter(posted_at__gt=time_threshold)      
-# # Post.objects.filter(posted_at__gte=datetime.date(2011, 1, 1),posted_at__lte=datetime.date(2011, 1, 31))
-
-
-# datetime.datetime(2020, 11, 13, 23, 1, 25, 838813, tzinfo=<UTC>)
-# datetime.datetime(2020, 11, 13, 22, 37, 17, 361020, tzinfo=<UTC>)
-
-# datetime.datetime(2020, 11, 13, 17, 29, 58, 97323, tzinfo=<UTC>)
-
-# datetime.datetime(2020, 11, 13, 16, 57, 33, 11162, tzinfo=<UTC>)
     pass
 

@@ -17,6 +17,9 @@ class Post(models.Model):
    video_linked      = models.FileField(upload_to = 'article/videos/', blank = True, null = True, max_length = 5242880)
    doc_linked        = models.FileField(upload_to = 'article/docs', blank = True, null = True, max_length = 2621440)
    
+   # Remove later
+   media_type        = models.CharField(max_length = 6, null = True)
+   
    written_by        = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="articles")  
    bookmarked_by     = models.ManyToManyField(UserProfile, related_name="bookmarked_posts", blank = True)
    posted_at         = models.DateTimeField(auto_now_add = True)
@@ -26,6 +29,7 @@ class Post(models.Model):
     
    class Meta:
       ordering = ('-posted_at',)
+   
    
 class Vote(models.Model):
    CHOICE = (  
@@ -42,9 +46,34 @@ class Vote(models.Model):
    voter             = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name = "votes")
     
    
+class Comment(models.Model):
+   post        = models.ForeignKey(Post, on_delete=models.CASCADE, related_name = "comments")
+   text        = models.TextField()
+   url         = models.URLField()
+   posted_at   = models.DateTimeField(auto_now_add = True)
+   
+   liked_by    = models.ManyToManyField(UserProfile, null = True, related_name = "comments_liked")
+   
+   def __str__(self):
+      return f'{self.text.first_name} {self.text.last_name} >  : {self.post.text[:30]}'
+    
+   class Meta:
+      ordering = ('-posted_at',)
+  
       
-      
-      
+class Reply(models.Model):
+   comment     = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name = "replies")
+   text        = models.TextField()
+   url         = models.URLField()
+   posted_at   = models.DateTimeField(auto_now_add = True)
+   
+   liked_by    = models.ManyToManyField(UserProfile, null = True, related_name = "replies_liked")
+   
+   def __str__(self):
+      return f'{self.text.first_name} {self.text.last_name} : {self.comment.text[:30]}'
+    
+   class Meta:
+      ordering = ('-posted_at',)
       
       
       

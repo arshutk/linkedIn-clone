@@ -24,7 +24,7 @@ urlpatterns = [
     url(r'', include(router.urls)),
     path('strength/', views.ProfileStrengthView.as_view()),
     path('dashboard/', views.DasboardView.as_view()),
-    path('banner/', views.BasicInfoView.as_view()), 
+    path('banner/<profile_id>/', views.BannerView.as_view()), 
     path('get_work/', views.GetWorkView.as_view()),
     path('get_academic/', views.GetAcademicView.as_view()),
     path('skills/', views.SkillView.as_view()),

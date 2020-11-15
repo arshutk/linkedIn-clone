@@ -200,21 +200,56 @@ class Skill(models.Model):
  
     
 class SocialProfile(models.Model):
-    user                            = models.OneToOneField(UserProfile, on_delete = models.CASCADE, related_name ='social_profile')
+    user                 = models.OneToOneField(UserProfile, on_delete = models.CASCADE, related_name ='social_profile')
     
-    bio                             = models.TextField(blank = True, null = True)
-    tagline                         = models.CharField(max_length = 60, blank = True, null = True)
-    background_photo                = models.ImageField(upload_to = 'background/', blank = True, null = True, max_length = 1048576)
-    dob                             = models.DateField(blank = True, null = True, default = None)
-    profile_url                     = models.TextField(blank = True, null = True)
+    bio                  = models.TextField(blank = True, null = True)
+    tagline              = models.CharField(max_length = 60, blank = True, null = True)
+    background_photo     = models.ImageField(upload_to = 'background/', blank = True, null = True, max_length = 1048576)
+    dob                  = models.DateField(blank = True, null = True, default = None)
+    profile_url          = models.TextField(blank = True, null = True)
     
-    current_industry                = models.OneToOneField(WorkExperience, blank = True, null = True, on_delete = models.SET_NULL, default = None, related_name ='current_work')
-    current_academia                = models.OneToOneField(Education, blank = True, null = True,on_delete = models.SET_NULL, default = None, related_name ='current_academic')
+    current_industry     = models.OneToOneField(WorkExperience, blank = True, null = True, on_delete = models.SET_NULL, default = None, related_name ='current_work')
+    current_academia     = models.OneToOneField(Education, blank = True, null = True,on_delete = models.SET_NULL, default = None, related_name ='current_academic')
     
+    viewer_list          = models.ManyToManyField(UserProfile, through = 'ProfileView')
+    
+    is_private           = models.BooleanField(default = False)
+    completely_private   = models.BooleanField(default = False) 
+    semi_private         = models.BooleanField(default = False) 
     
     def __str__(self):
-        return f'{self.user.first_name} {self.user.last_name}'
+        return f'{self.user.first_name} {self.user.last_name} > {self.tagline}'
     
     class Meta:
         verbose_name = 'Social Profile'
         verbose_name_plural = 'Social Profiles'
+        
+        
+class ProfileView(models.Model):
+    viewer          = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name ='viewed')
+    profile         = models.ForeignKey(SocialProfile, on_delete = models.CASCADE, related_name ='views')
+    viewed_time     = models.DateTimeField(auto_now_add = True)
+    
+    def __str__(self):
+        return f'{self.user.first_name} {self.user.last_name} > {self.profile.user.first_name} {self.profile.user.last_name}'
+    
+    class Meta:
+        verbose_name = 'Profile View'
+        verbose_name_plural = 'Profile Views'
+        # ordering = ('-date_viewed','user')
+
+
+# class ProfileView(models.Model):
+#     user            = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name ='viewed')
+#     profile         = models.ForeignKey(SocialProfile, on_delete = models.CASCADE, related_name ='views')
+#     date_viewed     = models.DateField(auto_now_add = True)
+    
+#     def __str__(self):
+#         return f'{self.user.first_name} {self.user.last_name} > {self.profile.user.first_name} {self.profile.user.last_name}'
+    
+#     class Meta:
+#         verbose_name = 'Profile View'
+#         verbose_name_plural = 'Profile Views'
+#         ordering = ('-date_viewed','user')
+
+    

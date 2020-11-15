@@ -2,11 +2,11 @@ from django.shortcuts import render
 
 
 from profile.models import  WorkExperience, Education, LicenseAndCertification, VolunteerExperience, Course, Project, TestScore, \
-                            Skill, SocialProfile
+                            Skill, SocialProfile, ProfileView
 
 from profile.serializers import WorkExperienceSerializer, EducationSerializer, LicenseAndCertificationSerializer, \
                                 VolunteerExperienceSerializer, CourseSerializer, ProjectSerializer, TestScoreSerializer, \
-                                SkillSerializer, SocialProfileSerializer
+                                SkillSerializer, SocialProfileSerializer, ProfileViewSerializer
 
 from rest_framework import views, generics, viewsets
 
@@ -432,10 +432,15 @@ class DasboardView(views.APIView):
                           status = status.HTTP_200_OK)
         
 
-class BasicInfoView(views.APIView):
+class BannerView(views.APIView):
     
-    def get(self, request):
-        user                = request.user.profile
+    def get(self, request, profile_id):
+        user    = UserProfile.objects.get(pk = profile_id)
+
+        if request.user.profile != user:
+            viewer = request.user.profile
+            user.social_profile.viewer_list.add(viewer)
+            
         try:
             domain_name = request.META['HTTP_HOST']
             picture_url = user.avatar.url
@@ -567,7 +572,22 @@ class BannerUpdateView(views.APIView):
                 return Response(data, status = status.HTTP_202_ACCEPTED)
             return Response(banner_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
-        
+
+class ProfieTrafficView(views.APIView):
+    
+    def get(self, request):
+        data = list()
+        social_profile = request.user.profile.social_profile
+        views = social_profile.views.all()
+        for view in views:
+            # if view.viewer.social_profile.
+            viewer_info = dict()
+            viewer_info['avatar']       = view.viewer.avatar
+            viewer_info['name']         = f'{view.viewer.first_name} {view.viewer.last_name}'
+            viewer_info['tagline']      = view.viewer.social_profile.tagline
+            viewer_info['time_elapsed'] = view.viewed_time
+            passs
+
                 
 
 
