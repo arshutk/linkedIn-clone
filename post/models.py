@@ -47,63 +47,31 @@ class Vote(models.Model):
     
    
 class Comment(models.Model):
-   post        = models.ForeignKey(Post, on_delete=models.CASCADE, related_name = "comments")
-   text        = models.TextField()
-   url         = models.URLField()
-   posted_at   = models.DateTimeField(auto_now_add = True)
+   post         = models.ForeignKey(Post, on_delete = models.CASCADE, related_name = "comments")
+   commented_by = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name = "comments_made")
+   text         = models.TextField()
+   posted_at    = models.DateTimeField(auto_now_add = True)
    
-   liked_by    = models.ManyToManyField(UserProfile, null = True, related_name = "comments_liked")
+   liked_by     = models.ManyToManyField(UserProfile, blank = True, related_name = "comments_liked")
    
    def __str__(self):
-      return f'{self.text.first_name} {self.text.last_name} >  : {self.post.text[:30]}'
+      return f'{self.commented_by.first_name} {self.commented_by.last_name} >  : {self.post.text[:30]}'
     
    class Meta:
       ordering = ('-posted_at',)
   
       
 class Reply(models.Model):
-   comment     = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name = "replies")
+   comment     = models.ForeignKey(Comment, on_delete = models.CASCADE, related_name = "replies")
+   replied_by  = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name = "replies_made")
    text        = models.TextField()
-   url         = models.URLField()
    posted_at   = models.DateTimeField(auto_now_add = True)
    
-   liked_by    = models.ManyToManyField(UserProfile, null = True, related_name = "replies_liked")
+   liked_by    = models.ManyToManyField(UserProfile, blank = True, related_name = "replies_liked")
    
    def __str__(self):
-      return f'{self.text.first_name} {self.text.last_name} : {self.comment.text[:30]}'
+      return f'{self.replied_by.first_name} {self.replied_by.last_name} : {self.comment.text[:30]}'
     
    class Meta:
       ordering = ('-posted_at',)
       
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-        
-# class Comment(models.Model):
-#     text        = models.CharField(max_length = 50)
-#     document    = models.ForeignKey(Document, on_delete = models.CASCADE, related_name = 'doc_comment')
-#     commenter   = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="commented_by")
-
-#     def __str__(self):
-#             return self.text 

@@ -1,22 +1,5 @@
-
-
-### Django ###
-*.log
-*.pot
-*.pyc
-__pycache__/
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-media
-venv
-.vscode
-# If your build process includes running collectstatic, then you probably don't need or want to include staticfiles/
-# in your Git repository. Update and uncomment the following line accordingly.
-# <django-project-name>/staticfiles/
-
-### Django.Python Stack ###
 # Byte-compiled / optimized / DLL files
+__pycache__/
 *.py[cod]
 *$py.class
 
@@ -25,6 +8,7 @@ venv
 
 # Distribution / packaging
 .Python
+env/
 build/
 develop-eggs/
 dist/
@@ -37,12 +21,9 @@ parts/
 sdist/
 var/
 wheels/
-pip-wheel-metadata/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -57,22 +38,21 @@ pip-delete-this-directory.txt
 # Unit test / coverage reports
 htmlcov/
 .tox/
-.nox/
 .coverage
 .coverage.*
 .cache
 nosetests.xml
 coverage.xml
 *.cover
-*.py,cover
 .hypothesis/
-.pytest_cache/
-pytestdebug.log
 
 # Translations
 *.mo
+*.pot
 
 # Django stuff:
+*.log
+local_settings.py
 
 # Flask stuff:
 instance/
@@ -83,7 +63,6 @@ instance/
 
 # Sphinx documentation
 docs/_build/
-doc/_build/
 
 # PyBuilder
 target/
@@ -91,39 +70,23 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# IPython
-profile_default/
-ipython_config.py
-
 # pyenv
 .python-version
 
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
-
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow
-__pypackages__/
-
-# Celery stuff
+# celery beat schedule file
 celerybeat-schedule
-celerybeat.pid
 
 # SageMath parsed files
 *.sage.py
 
-# Environments
+# dotenv
 .env
+
+# virtualenv
 .venv
-env/
 venv/
 ENV/
-env.bak/
-venv.bak/
-
+.vscode
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -136,11 +99,38 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-.dmypy.json
-dmypy.json
 
-# Pyre type checker
-.pyre/
+.DS_Store
+*.sqlite3
+media/
+*.pyc
+*.db
+*.pid
 
-# pytype static type analyzer
-.pytype/
+# Ignore Django Migrations in Development if you are working on team
+
+# Only for Development only
+# **/migrations/**
+# !**/migrations
+# !**/migrations/__init__.py
+
+
+#django-rest-framework
+*.pyc
+*.db
+*~
+.*
+
+/site/
+/htmlcov/
+/coverage/
+/build/
+/dist/
+/*.egg-info/
+/env/
+MANIFEST
+coverage.*
+
+!.gitignore
+!.travis.yml
+!.isort.cfg

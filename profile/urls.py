@@ -18,20 +18,25 @@ router.register(r'volunteer', views.VolunteerExperienceViewset)
 router.register(r'courses', views.CourseViewset)
 router.register(r'projects', views.ProjectViewset)
 router.register(r'scores', views.TestScoreViewset)
+router.register(r'vacancy', views.JobVacancyView)
 
 urlpatterns = [
     
     url(r'', include(router.urls)),
-    path('strength/', views.ProfileStrengthView.as_view()),
-    path('dashboard/', views.DasboardView.as_view()),
-    path('banner/<profile_id>/', views.BannerView.as_view()), 
-    path('get_work/', views.GetWorkView.as_view()),
-    path('get_academic/', views.GetAcademicView.as_view()),
-    path('skills/', views.SkillView.as_view()),
-    path('skills/<int:skill_id>/', views.SkillUpdateView.as_view()),
-    path('update/<int:profile_id>/', views.UserProfileUpdate.as_view()),
+    path('strength/', views.ProfileStrengthView.as_view()), 
+    path('dashboard/<int:profile_id>/', views.DasboardView.as_view()),
+    path('banner/<int:profile_id>/', views.BannerView.as_view()), 
+    path('get_work/<int:profile_id>/', views.GetWorkView.as_view()),
+    path('get_academic/<int:profile_id>/', views.GetAcademicView.as_view()),
+    path('skills/<int:profile_id>/', views.SkillView.as_view()),
+    path('skills/update/<int:skill_id>/', views.SkillUpdateView.as_view()),
+    # path('update/<int:profile_id>/', views.UserProfileUpdate.as_view()),
     path('view/social_profile/', views.SocialProfileView.as_view()),
-    path('update/social_profile/<int:profile_id>/', views.SocialProfileUpdate.as_view()),
-    path('update/banner/<int:profile_id>/', views.BannerUpdateView.as_view()),
+    # path('update/social_profile/<int:profile_id>/', views.SocialProfileUpdate.as_view()),
+    path('banner/update/<int:profile_id>/', views.BannerUpdateView.as_view()),
+    path('about/update/<int:profile_id>/', views.BannerUpdateView.as_view()),
+    
+    path('vacancy/apply/<int:vacancy_id>/', views.VacancyApplyView.as_view()),
+    path('vacancy/bookmark/<int:vacancy_id>/', views.VacancyBookmarkView.as_view()),
     
 ] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

@@ -111,34 +111,34 @@ class OrganizationAnalytic(models.Model):
 
 
     
-class JobVacancy(models.Model):
-    TYPE = (
-                ('Fulltime','Full-Time'),
-                ('Parttime','Part-Time'),
-                ('Internship','Internship'),
-                ('Contract','Contract'),
-               )
+# class JobVacancy(models.Model):
+#     TYPE = (
+#                 ('Fulltime','Full-Time'),
+#                 ('Parttime','Part-Time'),
+#                 ('Internship','Internship'),
+#                 ('Contract','Contract'),
+#                )
     
-    oganization         = models.ForeignKey(Organization, on_delete = models.CASCADE, related_name ='vacancies')
-    title               = models.CharField(max_length = 30)
-    is_remote           = models.BooleanField(default = False)
-    location            = models.CharField(max_length = 50)
-    employement_type    = models.CharField(choices = TYPE, default = None, max_length = 50)
-    description         = models.TextField()
-    file_linked         = models.FileField(upload_to='organisation/jobs', null = True, blank = True, max_length = 1048576)
-    skills_required     = models.CharField(max_length = 30)
+#     oganization         = models.ForeignKey(Organization, on_delete = models.CASCADE, related_name ='vacancies')
+#     title               = models.CharField(max_length = 30)
+#     is_remote           = models.BooleanField(default = False)
+#     location            = models.CharField(max_length = 50)
+#     employement_type    = models.CharField(choices = TYPE, default = None, max_length = 50)
+#     description         = models.TextField()
+#     file_linked         = models.FileField(upload_to='organisation/jobs', null = True, blank = True, max_length = 1048576)
+#     skills_required     = models.CharField(max_length = 30)
     
     
-    def __str__(self):
-        return f'{self.organisation.name} : {self.title} : {self.location}'
+#     def __str__(self):
+#         return f'{self.organisation.name} : {self.title} : {self.location}'
     
-    class Meta:
-        verbose_name = 'Job Vacancy'
-        verbose_name_plural = 'Job Vacancies'
+#     class Meta:
+#         verbose_name = 'Job Vacancy'
+#         verbose_name_plural = 'Job Vacancies'
 
-class JobVacancyQuestion(models.Model):
-    organization        = models.ForeignKey(JobVacancy, on_delete = models.CASCADE, related_name = 'screening_questions')
-    pass
+# class JobVacancyQuestion(models.Model):
+#     organization        = models.ForeignKey(JobVacancy, on_delete = models.CASCADE, related_name = 'screening_questions')
+#     pass
     
     
     
