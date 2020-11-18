@@ -31,6 +31,8 @@ from network.models import Connection
 
 from django.shortcuts import get_object_or_404
 
+from rest_framework import filters
+
 class SocialProfileView(views.APIView):
 
     def get(self, request):
@@ -48,19 +50,14 @@ class WorkExperienceViewset(viewsets.ViewSet):
         
         profile_id       = request.data.get('user')
         update_tagline   = request.data.get('update_tagline')
-        
-        # social_profile   = UserProfile.objects.get(id = profile_id).social_profile
         social_profile   = get_object_or_404(UserProfile, id = profile_id).social_profile
         
         if update_tagline:   
             serializer = WorkExperienceSerializer(data = request.data, context = {'request':request})
             if serializer.is_valid():
                 serializer.save()
-                print(social_profile.tagline)
                 social_profile.tagline = f"{serializer.data['position']} at {serializer.data['organization_name']}"
-                print(social_profile.tagline)
                 social_profile.save()
-                print(social_profile.tagline)
                 return Response(serializer.data, status = status.HTTP_201_CREATED)
             return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
         serializer = WorkExperienceSerializer(data = request.data, context = {'request':request})
@@ -88,8 +85,6 @@ class WorkExperienceViewset(viewsets.ViewSet):
             serializer.save()
             return Response(serializer.data, status = status.HTTP_201_CREATED)
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-    
-    
     
     def get_permissions(self):
         permission_classes = []
@@ -243,7 +238,6 @@ class SkillView(views.APIView):
 class SkillUpdateView(views.APIView):
 
     def put(self, request, skill_id):
-        print(request.data)
         data            = request.data.copy()
         skills_list     = data.get('skills_list')
         
@@ -271,11 +265,6 @@ class SkillUpdateView(views.APIView):
     def patch(self, request, skill_id):
         
         top_skills = request.data.get('top_skills')
-        
-        # try:
-        #     skills = Skill.objects.get(id = skill_id)
-        # except:
-        #     raise Http404
         skills = get_object_or_404(Skill, id = skill_id )
         skills_list = json.decoder.JSONDecoder().decode(skills.skills_list)
         
@@ -348,8 +337,8 @@ class ProfileStrengthView(views.APIView):
         
         avatar              = user.avatar
         article             = user.articles.count()
-        connections         = user.connection_request_received.filter(has_been_accepted = True).count() + \
-                              user.connection_request_sent.filter(has_been_accepted = True).count()
+        connections         = user.request_received.filter(has_been_accepted = True).count() + \
+                              user.request_sent.filter(has_been_accepted = True).count()
         try:
             skills          = len(user.skills.skills_list)
         except:
@@ -402,8 +391,8 @@ class ProfileStrengthView(views.APIView):
         else:
             message['About'] = False        
             
-        if len(message) == 0:
-            return Response({'detail': 'User has completed his profile.'}, status = status.HTTP_204_NO_CONTENT)      
+        # if len(message) == 0:
+        #     return Response({'detail': 'User has completed his profile.'}, status = status.HTTP_204_NO_CONTENT)      
         return Response({'profile_strength': profile_strength, 'message': message}, status = status.HTTP_200_OK)
             
    
@@ -433,8 +422,25 @@ class BannerView(views.APIView):
         if viewer != user:
             viewer = request.user.profile
             user.social_profile.viewer_list.add(viewer)
-            
-            # connection_status = Connection.objects.get(sender)
+            connection_status = (Connection.objects.filter(sender = viewer, receiver = user) | \
+                                Connection.objects.filter(sender = user, receiver = viewer))
+            if connection_status:
+                if connection_status[0].has_been_accepted == True:
+                    is_connected = True
+                    is_pending = False
+                    connection_id = connection_status[0].id
+                else:
+                    is_connected = False
+                    is_pending = True
+                    connection_id = connection_status[0].id
+            else:
+                is_connected = False
+                is_pending = False
+                connection_id = None
+        else:
+            is_connected = None
+            is_pending = None
+            connection_id = None
             
         try:
             domain_name = request.META['HTTP_HOST']
@@ -484,7 +490,10 @@ class BannerView(views.APIView):
                          'connection':connection, 
                          'profile_views':profile_views, 
                          'bookmarked_posts':bookmarked_posts, 
-                         'about':about}, 
+                         'about':about,
+                         'is_connected':is_connected,
+                         'is_pending':is_pending,
+                         'connection_id':connection_id}, 
                           status = status.HTTP_200_OK)
         
 class BannerUpdateView(views.APIView):
@@ -533,53 +542,6 @@ class BannerUpdateView(views.APIView):
             serializer.save()
             return Response(serializer.data, status = status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-        
-        
-           
-class UserProfileUpdate(views.APIView):
-    
-    def patch(self, request, profile_id = None):
-        
-        user = UserProfile.objects.get(id = profile_id)
-        
-        data = request.data.copy()
-        
-        try: 
-            del data['phone_number']
-        except:
-            pass
-        
-        serializer = UserProfileSerializer(user, data = data, partial = True, context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status = status.HTTP_200_OK)
-        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-        
-     
-        
-class SocialProfileUpdate(views.APIView):
-    
-    def patch(self, request, profile_id = None):
-        
-        social_profile = UserProfile.objects.get(id = profile_id).social_profile
-        
-        data = request.data.copy()
-        
-        try: 
-            del data['current_industry']
-        except:
-            pass
-        
-        try: 
-            del data['current_academia']
-        except:
-            pass
-        
-        serializer = SocialProfileSerializer(social_profile, data = data, partial = True, context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status = status.HTTP_200_OK)
-        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
 
 class JobVacancyView(viewsets.ViewSet):
@@ -592,45 +554,45 @@ class JobVacancyView(viewsets.ViewSet):
         data = JobVacancy.objects.filter(posted_by = user)
         serializer = JobVacanySerializer(data, many = True,context = {'request': request})
         return Response(serializer.data, status = status.HTTP_200_OK)
+    
+    def retrieve(self, request, pk):
+        vacancy = get_object_or_404(JobVacancy, id = pk)
+        serializer = JobVacanySerializer(vacancy, context = {'request': request})
+        return Response(serializer.data, status = status.HTTP_200_OK)
      
     def create(self, request):
+        data = request.data.copy()
+        data['posted_by'] = request.user.profile.id
+        serializer = JobVacanySerializer(data = data, context = {'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status = status.HTTP_201_CREATED)
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+    
+    def partial_update(self, request, pk):
+        vacancy = get_object_or_404(JobVacancy, id = pk)
+        # if vacancy.is_closed:
+        vacancy.viewed_by.clear() 
+        vacancy.saved_by.clear() 
+        vacancy.applicants.clear() 
+        data = request.data.copy()
         try:
-            request.data['posted_by']
+            del data['posted_by']
         except:
-            raise Http404
+            pass
+        try:
+            del data['organization']
+        except:
+            pass
         user = request.user.profile
-        if user.id ==  request.data.get('posted_by'):
-            serializer = JobVacanySerializer(data = request.data, context = {'request': request})
+        if user == vacancy.posted_by:
+            serializer = JobVacanySerializer(vacancy, data = request.data, partial = True, context = {'request': request})
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status = status.HTTP_201_CREATED)
             return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-        return Response({'detail': 'Cannot open job vacancies for other users.'}, status = status.HTTP_403_FORBIDDEN)
-    
-    def partial_update(self, request, pk):
-        vacancy = get_object_or_404(JobVacancy, id = pk)
-        if vacancy.is_closed:
-            vacancy.viewed_by.clear() 
-            vacancy.saved_by.clear() 
-            vacancy.applicants.clear() 
-            data = request.data.copy()
-            try:
-                del data['posted_by']
-            except:
-                pass
-            try:
-                del data['organization']
-            except:
-                pass
-            user = request.user.profile
-            if user == vacancy.posted_by:
-                serializer = JobVacanySerializer(vacancy, data = request.data, partial = True, context = {'request': request})
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response(serializer.data, status = status.HTTP_201_CREATED)
-                return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-            return Response({'detail': 'Cannot edit job vacancies of other users.'}, status = status.HTTP_403_FORBIDDEN)
-        return Response({'detail': 'First close the job vacancy to edit.'}, status = status.HTTP_403_FORBIDDEN)
+        return Response({'detail': 'Cannot edit job vacancies of other users.'}, status = status.HTTP_403_FORBIDDEN)
+        # return Response({'detail': 'First close the job vacancy to edit.'}, status = status.HTTP_403_FORBIDDEN)
     
     def destroy(self, request, pk):
         vacancy = get_object_or_404(JobVacancy, id = pk)
@@ -667,7 +629,6 @@ class VacancyBookmarkView(views.APIView):
     def post(self, request, vacancy_id):
         vacancy = get_object_or_404(JobVacancy, id = vacancy_id)
         user = request.user.profile
-        # request.data['']
         if user not in vacancy.saved_by.all():
             vacancy.saved_by.add(user)
             return Response({'detail': 'Vacancy saved.'}, status = status.HTTP_200_OK)
@@ -685,31 +646,5 @@ class VacancyBookmarkView(views.APIView):
         
 
 
-
-
-
-
-
-
-
-
-
-
-# class ProfileTrafficView(views.APIView):
-    
-#     def get(self, request):
-#         data = list()
-#         social_profile = request.user.profile.social_profile
-#         views = social_profile.views.all()
-#         for view in views:
-#             # if view.viewer.social_profile.
-#             viewer_info = dict()
-#             viewer_info['avatar']       = view.viewer.avatar
-#             viewer_info['name']         = f'{view.viewer.first_name} {view.viewer.last_name}'
-#             viewer_info['tagline']      = view.viewer.social_profile.tagline
-#             viewer_info['time_elapsed'] = view.viewed_time
-#             pass
-
-                
 
 

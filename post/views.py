@@ -26,7 +26,6 @@ class PostView(views.APIView):
         
     def post(self, request):
         data = request.data.copy()
-
         # remove later
         media_type         = request.data.get('media_type')
         if media_type:
@@ -65,20 +64,17 @@ class VoteGetView(views.APIView):
         try:
             return Post.objects.get(id = post_id)
         except:
-            raise Http404
-        
+            raise Http404    
     
     def get(self, request, post_id):
         post = self.get_post(post_id)
         vote_list = dict()
-
         vote_list.update({'like': post.votes.filter(vote_type = 'like').count()})
         vote_list.update({'celebrate': post.votes.filter(vote_type = 'celebrate').count()})
         vote_list.update({'support': post.votes.filter(vote_type = 'support').count()})
         vote_list.update({'love': post.votes.filter(vote_type = 'love').count()})
         vote_list.update({'insightful': post.votes.filter(vote_type = 'insightful').count()})
-        vote_list.update({'curious': post.votes.filter(vote_type = 'curious').count()})
-                
+        vote_list.update({'curious': post.votes.filter(vote_type = 'curious').count()})        
         return Response(vote_list, status=status.HTTP_200_OK)
     
     
@@ -133,6 +129,7 @@ class BookmarkView(views.APIView):
             post.bookmarked_by.remove(user)
             return Response({'detail': "Bookmark removed"},status = status.HTTP_201_CREATED) 
         return Response({'detail': "Post is not bookmarked"},status = status.HTTP_400_BAD_REQUEST)
+    
     
 class GetBookmarks(views.APIView):
 

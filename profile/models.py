@@ -190,7 +190,7 @@ class Skill(models.Model):
     skills_list         = models.TextField()
     
     top_skills          = models.TextField(blank = True, null = True)
-
+    # endorsement         = models.ManyToManyField(UserProfile, related_name = "", blank = True )
     def __str__(self):
         return f'{self.user.first_name} {self.user.last_name} : {self.top_skills}'
         
@@ -229,7 +229,7 @@ class ProfileView(models.Model):
     viewer          = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name ='viewed')
     profile         = models.ForeignKey(SocialProfile, on_delete = models.CASCADE, related_name ='views')
     viewed_time     = models.DateTimeField(auto_now_add = True)
-    
+        
     def __str__(self):
         return f'{self.user.first_name} {self.user.last_name} > {self.profile.user.first_name} {self.profile.user.last_name}'
     
@@ -245,10 +245,12 @@ class JobVacancy(models.Model):
                 ('Parttime','Part-Time'),
                 ('Internship','Internship'),
                 ('Contract','Contract'),
+                ('Volunteer','Volunteer'),
+                ('Temporary','Temporary'),
                )
     
     # oganization         = models.ForeignKey(Organization, on_delete = models.CASCADE, related_name ='vacancies')
-    organization         = models.CharField(max_length = 50)
+    organization        = models.CharField(max_length = 50)
     title               = models.CharField(max_length = 30)
     is_remote           = models.BooleanField(default = False, blank = True)
     location            = models.CharField(max_length = 50)
@@ -257,6 +259,8 @@ class JobVacancy(models.Model):
     file_linked         = models.FileField(upload_to='user/jobs', null = True, blank = True, max_length = 1048576)
     skills_required     = models.CharField(max_length = 30, null = True, blank = True)  
     posted_by           = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name ='jobs_posted')
+    industry            = models.CharField(max_length = 60)
+    pay_range           = models.CharField(max_length = 60, null = True, blank = True)
     
     is_closed           = models.BooleanField(default = False)
     show_profile        = models.BooleanField(default = True)
@@ -280,7 +284,7 @@ class JobApplication(models.Model):
     applied_by  = models.ForeignKey(UserProfile, on_delete = models.CASCADE)
     vacancy     = models.ForeignKey(JobVacancy, on_delete = models.CASCADE)
     time        = models.DateField(auto_now_add = True)
-    remarks     = models.CharField(max_length = 100)
+    remarks     = models.CharField(max_length = 100, null = True, blank = True)
     file_linked = models.FileField(upload_to='user/jobs', null = True, blank = True, max_length = 1048576)
     
     def __str__(self):

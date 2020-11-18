@@ -11,9 +11,3 @@ class ConnectionSerializer(serializers.ModelSerializer):
         model   = Connection
         fields  = '__all__'   
         
-    def to_representation(self,instance):
-        response = super().to_representation(instance)
-        response['sender']   = UserProfileSerializer(instance.sender, context = {'request': self.context.get('request')}).data
-        response['receiver'] = UserProfileSerializer(instance.receiver, context = {'request': self.context.get('request')}).data
-        return response
-

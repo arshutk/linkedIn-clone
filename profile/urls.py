@@ -30,9 +30,9 @@ urlpatterns = [
     path('get_academic/<int:profile_id>/', views.GetAcademicView.as_view()),
     path('skills/<int:profile_id>/', views.SkillView.as_view()),
     path('skills/update/<int:skill_id>/', views.SkillUpdateView.as_view()),
-    # path('update/<int:profile_id>/', views.UserProfileUpdate.as_view()),
+
     path('view/social_profile/', views.SocialProfileView.as_view()),
-    # path('update/social_profile/<int:profile_id>/', views.SocialProfileUpdate.as_view()),
+
     path('banner/update/<int:profile_id>/', views.BannerUpdateView.as_view()),
     path('about/update/<int:profile_id>/', views.BannerUpdateView.as_view()),
     

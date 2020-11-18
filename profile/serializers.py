@@ -16,8 +16,7 @@ class WorkExperienceSerializer(serializers.ModelSerializer):
     
     class Meta:
         model   = WorkExperience
-        fields  = '__all__'
-        # read_only_fields = ('user',)     
+        fields  = '__all__'  
            
     def to_representation(self,instance):
         response = super().to_representation(instance)
@@ -30,8 +29,7 @@ class EducationSerializer(serializers.ModelSerializer):
     
     class Meta:
         model   = Education
-        fields  = '__all__'
-        # read_only_fields = ('user',)  
+        fields  = '__all__' 
               
     def to_representation(self,instance):
         response = super().to_representation(instance)
@@ -45,7 +43,6 @@ class LicenseAndCertificationSerializer(serializers.ModelSerializer):
     class Meta:
         model   = LicenseAndCertification
         fields  = '__all__'
-        read_only_fields = ('user',)      
           
     def to_representation(self,instance):
         response = super().to_representation(instance)
@@ -58,7 +55,6 @@ class VolunteerExperienceSerializer(serializers.ModelSerializer):
     class Meta:
         model   = VolunteerExperience
         fields  = '__all__'
-        read_only_fields = ('user',)   
              
     def to_representation(self,instance):
         response = super().to_representation(instance)
@@ -72,7 +68,6 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model   = Course
         fields  = '__all__'
-        read_only_fields = ('user',)  
               
     def to_representation(self,instance):
         response = super().to_representation(instance)
@@ -85,7 +80,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model   = Project
         fields  = '__all__'
-        read_only_fields = ('user',)  
               
     def to_representation(self,instance):
         response = super().to_representation(instance)
@@ -98,7 +92,6 @@ class TestScoreSerializer(serializers.ModelSerializer):
     class Meta:
         model   = TestScore
         fields  = '__all__'
-        read_only_fields = ('user',)  
               
     def to_representation(self,instance):
         response = super().to_representation(instance)
@@ -130,7 +123,6 @@ class SocialProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model   = SocialProfile
         fields  = '__all__'
-        read_only_fields = ('user',)
         
     def to_representation(self,instance):
         response = super().to_representation(instance)
@@ -157,6 +149,13 @@ class JobVacanySerializer(serializers.ModelSerializer):
     class Meta:
         model   = JobVacancy
         fields  = '__all__'
+    
+    def to_representation(self,instance):
+        response = super().to_representation(instance)
+        response['saved_by'] = UserProfileSerializer(instance.saved_by, many = True, context = {'request': self.context.get('request')}).data
+        response['viewed_by'] = UserProfileSerializer(instance.viewed_by, many = True, context = {'request': self.context.get('request')}).data
+        response['applicants'] = UserProfileSerializer(instance.applicants, many = True, context = {'request': self.context.get('request')}).data
+        return response
 
 
 class JobApplicationSerializer(serializers.ModelSerializer):
