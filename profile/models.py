@@ -231,7 +231,7 @@ class ProfileView(models.Model):
     viewed_time     = models.DateTimeField(auto_now_add = True)
         
     def __str__(self):
-        return f'{self.user.first_name} {self.user.last_name} > {self.profile.user.first_name} {self.profile.user.last_name}'
+        return f'{self.viewer.first_name} {self.viewer.last_name} > {self.profile.user.first_name} {self.profile.user.last_name}'
     
     class Meta:
         verbose_name = 'Profile View'
@@ -257,10 +257,12 @@ class JobVacancy(models.Model):
     employment_type     = models.CharField(choices = TYPE, max_length = 50)
     description         = models.TextField(blank = True)
     file_linked         = models.FileField(upload_to='user/jobs', null = True, blank = True, max_length = 1048576)
-    skills_required     = models.CharField(max_length = 30, null = True, blank = True)  
+    skills_required     = models.CharField(max_length = 100, null = True, blank = True)  
     posted_by           = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name ='jobs_posted')
     industry            = models.CharField(max_length = 60)
     pay_range           = models.CharField(max_length = 60, null = True, blank = True)
+    
+    posted_at           = models.DateField(auto_now_add = True)
     
     is_closed           = models.BooleanField(default = False)
     show_profile        = models.BooleanField(default = True)
@@ -286,6 +288,7 @@ class JobApplication(models.Model):
     time        = models.DateField(auto_now_add = True)
     remarks     = models.CharField(max_length = 100, null = True, blank = True)
     file_linked = models.FileField(upload_to='user/jobs', null = True, blank = True, max_length = 1048576)
+    has_been_accepted = models.BooleanField(blank = True, null = True)
     
     def __str__(self):
         return f'{self.applied_by.first_name} {self.applied_by.last_name}'

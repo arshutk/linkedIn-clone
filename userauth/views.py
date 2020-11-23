@@ -2,7 +2,7 @@ from django.shortcuts import render
 
 from rest_framework import views, generics
 
-from userauth.serializers import UserSerializer, UserProfileSerializer, MyTokenObtainPairSerializer
+from userauth.serializers import UserSerializer, UserProfileSerializer, MyTokenObtainPairSerializer, UserProfileSearchSerailizer
 
 from userauth.models import User, UserProfile, OTPModel
 
@@ -28,7 +28,15 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.utils import timezone
 
+from network.models import Network, Connection
+
+from rest_framework import filters
+
+from django.core.mail import send_mail
     
+from django.template import loader
+
+
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
 
@@ -38,8 +46,6 @@ def get_tokens_for_user(user):
     }
 
 
-
-
 def OTP_create_send(email_linked, phone_linked):
     OTPModel.objects.filter(email_linked__iexact = email_linked).delete()
     otp = randint(100000, 999999) 
@@ -47,11 +53,9 @@ def OTP_create_send(email_linked, phone_linked):
         otp = randint(100000, 999999)
     time_of_creation = int(time.time())
     OTPModel.objects.create(otp = otp, email_linked = email_linked, phone_linked = phone_linked, time_created = time_of_creation)   
-    
-                                                        ##############
-                                                        # SMS CODE   #    
-                                                        ##############
-                                                        
+    # html_content = loader.render_to_string('index.html', context = {'otp' : otp,})
+    # mail_body = f"OTP is {otp}. This OTP will be valid for 5 minutes."
+    # send_mail('Greetings from SmartLearn Team', mail_body, 'LinkedInClone<utkp09@gmail.com>', [email_linked], html_message = html_content, fail_silently = False)                                                    
     return None  
 
 
@@ -141,7 +145,8 @@ class UserProfileCreateView(views.APIView):
                 
                 SocialProfile.objects.create(user = self.get_user(serializer.data['id']), 
                                                 tagline = f"{data['position']} at {data['organization_name']}",
-                                                current_industry = self.get_industry(serializer.data['id']))                                  
+                                                current_industry = self.get_industry(serializer.data['id']))     
+                Network.objects.create(user = self.get_user(serializer.data['id']),)                             
                 return Response(serializer.data, status = status.HTTP_201_CREATED)
             Education.objects.create(user = self.get_user(serializer.data['id']), 
                                              organization_name = f"{data['organization_name']}",
@@ -151,6 +156,8 @@ class UserProfileCreateView(views.APIView):
             SocialProfile.objects.create(user = self.get_user(serializer.data['id']), 
                                             tagline = f"{data['position']} at {data['organization_name']}",
                                             current_academia = self.get_academia(serializer.data['id']))
+            
+            Network.objects.create(user = self.get_user(serializer.data['id']),)
             return Response(serializer.data, status = status.HTTP_201_CREATED)
         return Response(serializer.errors, status = status.HTTP_201_CREATED)
     
@@ -245,3 +252,49 @@ class OTPSend(views.APIView):
             OTP_create_send(email_linked, request_phone_number)
             return Response({'user_id': user_id}, status = status.HTTP_202_ACCEPTED)
         
+
+class UserInfo(views.APIView):
+    
+    def get(self, request):
+        user = request.user.profile
+        
+        user_name = f'{user.first_name} {user.last_name}'
+        try:
+            user_avatar  = request.build_absolute_uri(user.avatar.url)
+        except:
+            user_avatar = None
+        user_tagline = user.social_profile.tagline
+        connection   = Connection.objects.filter(sender = user, has_been_accepted = True).count() + \
+                       Connection.objects.filter(receiver = user, has_been_accepted = True).count()
+        bookmarks    = user.articles.count()
+        
+        return Response({'user_name': user_name,
+                        'user_avatar': user_avatar,
+                        'user_tagline': user_tagline,
+                        'connection': connection,
+                        'bookmarks': bookmarks}, status = status.HTTP_200_OK)
+                               
+
+# Search
+
+class UserSearchView(generics.ListAPIView):
+    queryset = UserProfile.objects.all()
+    serializer_class = UserProfileSearchSerailizer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['first_name', 'last_name','location',]
+    
+    # def get_serializer_context(self):
+    #     # print(self.request.query_params.get('radius'))
+    #     context = super(JobSearchView, self).get_serializer_context()
+    #     context.update({"request": self.request, 'user': self.request.user.profile})
+    #     return context
+    
+class ProfileRecommendView(views.APIView):
+    def get(self, request):
+        user = request.user.profile
+        query = UserProfile.objects.exclude(id = user.id).order_by('?')[:10]
+        serializer = UserProfileSearchSerailizer(query, many = True, context = {'request': request})
+        return Response(serializer.data, status = status.HTTP_200_OK)
+        
+                
+

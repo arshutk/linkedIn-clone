@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     'network',
     'organization',
     'post',
-    'chat'
+    'chat',
+    'notification'
    
 ]
 
@@ -190,3 +191,22 @@ SIMPLE_JWT = {
 
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+
+# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_HOST = "smtp.gmail.com"
+# EMAIL_USE_TLS = True
+# EMAIL_PORT = 587
+# EMAIL_HOST_USER = "utkp09@gmail.com"
+# EMAIL_HOST_PASSWORD = ""
+
+
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("localhost", 6379)],
+        },
+    },
+}

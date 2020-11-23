@@ -34,5 +34,12 @@ urlpatterns = [
     
     path('profile/<int:profile_id>/', views.UserProfileView.as_view()),
     
+    path('info/', views.UserInfo.as_view()),
+    
+    #Search
+    path('', views.UserSearchView.as_view()),
+    
+    path('view/', views.ProfileRecommendView.as_view()),  
+    
     
 ] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

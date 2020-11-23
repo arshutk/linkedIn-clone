@@ -10,8 +10,6 @@ from django.conf.urls.static import static
 
 
 urlpatterns = [
-    path('<receiver_id>/', views.ChatView.as_view()),
-    path('delete/<chat_id>', views.ChatDeleteView.as_view()),
     
 ] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
 

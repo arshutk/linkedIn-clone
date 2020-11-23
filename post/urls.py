@@ -18,7 +18,7 @@ urlpatterns = [
     path('vote/<int:post_id>/<str:vote_type>/', views.VotePostView.as_view()),
     path('vote/view/<int:post_id>/', views.VoteGetView.as_view()),
 
-    path('bookmark/create/<int:post_id>/', views.BookmarkView.as_view()),
+    path('bookmark/<int:post_id>/', views.BookmarkView.as_view()),
     path('bookmark/view/<int:user_id>/', views.GetBookmarks.as_view()),
     
     # Comment
@@ -31,7 +31,10 @@ urlpatterns = [
     path('comment/reply/update/<int:reply_id>/', views.ReplyUpdateView.as_view()),
     path('comment/reply/like/<int:reply_id>/', views.ReplyUpdateView.as_view()),
     
+    path('feed/', views.FeedView.as_view()),
     
+    #search
+    path('', views.PostSearchView.as_view()),
     
 ] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
 

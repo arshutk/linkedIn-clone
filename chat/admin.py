@@ -1,5 +1,13 @@
 from django.contrib import admin
 
-from chat.models import Chat
+from chat.models import Thread, Chat
 
-admin.site.register(Chat)
+class ChatInline(admin.TabularInline):
+    model = Chat
+
+class ThreadAdmin(admin.ModelAdmin):
+    inlines = [
+        ChatInline,
+    ]
+    
+admin.site.register(Thread, ThreadAdmin)

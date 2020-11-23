@@ -99,8 +99,6 @@ class UserProfile(models.Model):
     
     is_online           = models.BooleanField(default = False)
     
-    followers           = models.ManyToManyField('self', related_name ='followers', blank = True)
-    
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
     

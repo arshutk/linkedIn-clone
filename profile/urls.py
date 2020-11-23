@@ -37,6 +37,14 @@ urlpatterns = [
     path('about/update/<int:profile_id>/', views.BannerUpdateView.as_view()),
     
     path('vacancy/apply/<int:vacancy_id>/', views.VacancyApplyView.as_view()),
+    path('view/vacancy/applied/vacancy/', views.AppliedVacancyGetView.as_view()),
     path('vacancy/bookmark/<int:vacancy_id>/', views.VacancyBookmarkView.as_view()),
+    path('vacancy/bookmark/view/', views.VacancyBookmarkGetView.as_view()),
+    path('vacancy/review/<int:vacancy_id>/<applicant_id>/', views.VacancyReviewView.as_view()),
     
+    path('view/recommended/vacancy/', views.VacancyRecommendView.as_view()),
+    
+    #search
+    path('search/', views.JobSearchView.as_view()),
+        
 ] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

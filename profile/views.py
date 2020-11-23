@@ -2,12 +2,12 @@ from django.shortcuts import render
 
 
 from profile.models import  WorkExperience, Education, LicenseAndCertification, VolunteerExperience, Course, Project, TestScore, \
-                            Skill, SocialProfile, ProfileView, JobVacancy
+                            Skill, SocialProfile, ProfileView, JobVacancy, JobApplication
 
 from profile.serializers import WorkExperienceSerializer, EducationSerializer, LicenseAndCertificationSerializer, \
                                 VolunteerExperienceSerializer, CourseSerializer, ProjectSerializer, TestScoreSerializer, \
-                                SkillSerializer, SocialProfileSerializer, ProfileViewSerializer, JobVacanySerializer, \
-                                JobApplicationSerializer
+                                SkillSerializer, SocialProfileSerializer, ProfileViewSerializer, JobCreateVacanySerializer, \
+                                JobApplicationCreateSerializer, JobApplicationSerializer, JobVacanySerializer
 
 from rest_framework import views, generics, viewsets
 
@@ -32,6 +32,11 @@ from network.models import Connection
 from django.shortcuts import get_object_or_404
 
 from rest_framework import filters
+
+from random import choice
+
+from notification.models import Notification
+
 
 class SocialProfileView(views.APIView):
 
@@ -399,10 +404,9 @@ class ProfileStrengthView(views.APIView):
         
 class DasboardView(views.APIView):   
     def get(self, request, profile_id = None):
-        # user                = request.user.profile
         user = get_object_or_404(UserProfile, id = profile_id)
         
-        profile_views       = 0
+        profile_views       = user.social_profile.viewer_list.count()
         no_of_articles      = user.articles.count()
         bookmarked_posts    = user.bookmarked_posts.count()
         
@@ -423,9 +427,9 @@ class BannerView(views.APIView):
             viewer = request.user.profile
             user.social_profile.viewer_list.add(viewer)
             connection_status = (Connection.objects.filter(sender = viewer, receiver = user) | \
-                                Connection.objects.filter(sender = user, receiver = viewer))
+                                 Connection.objects.filter(sender = user, receiver = viewer))
             if connection_status:
-                if connection_status[0].has_been_accepted == True:
+                if connection_status[0].has_been_accepted:
                     is_connected = True
                     is_pending = False
                     connection_id = connection_status[0].id
@@ -481,20 +485,12 @@ class BannerView(views.APIView):
 
         about               = user.social_profile.bio
         
-        return Response({'avatar':avatar,
-                         'first_name':first_name, 
-                         'last_name':last_name, 
-                         'location':location,
-                         'tagline':tagline, 
-                         'experience':experience, 
-                         'connection':connection, 
-                         'profile_views':profile_views, 
-                         'bookmarked_posts':bookmarked_posts, 
-                         'about':about,
-                         'is_connected':is_connected,
-                         'is_pending':is_pending,
-                         'connection_id':connection_id}, 
+        return Response({'avatar':avatar,'first_name':first_name, 'last_name':last_name, 
+                         'location':location,'tagline':tagline,'experience':experience, 
+                         'connection':connection, 'profile_views':profile_views, 'bookmarked_posts':bookmarked_posts, 
+                         'about':about,'is_connected':is_connected,'is_pending':is_pending,'connection_id':connection_id}, 
                           status = status.HTTP_200_OK)
+        
         
 class BannerUpdateView(views.APIView):
     
@@ -546,28 +542,27 @@ class BannerUpdateView(views.APIView):
 
 class JobVacancyView(viewsets.ViewSet):
     
-    queryset    = JobVacancy.objects.all()
-    serializer_class = JobVacanySerializer
+    queryset    = JobVacancy.objects.all()    
     
     def get(self, request):
         user = request.user.profile   
         data = JobVacancy.objects.filter(posted_by = user)
-        serializer = JobVacanySerializer(data, many = True,context = {'request': request})
+        serializer = JobVacanySerializer(data, many = True,context = {'request': request, 'user': user})
         return Response(serializer.data, status = status.HTTP_200_OK)
     
     def retrieve(self, request, pk):
         vacancy = get_object_or_404(JobVacancy, id = pk)
-        serializer = JobVacanySerializer(vacancy, context = {'request': request})
+        serializer = JobVacanySerializer(vacancy, context = {'request': request, 'user': request.user.profile })
         return Response(serializer.data, status = status.HTTP_200_OK)
      
     def create(self, request):
         data = request.data.copy()
         data['posted_by'] = request.user.profile.id
-        serializer = JobVacanySerializer(data = data, context = {'request': request})
+        serializer = JobCreateVacanySerializer(data = data, context = {'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status = status.HTTP_201_CREATED)
-        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)       
     
     def partial_update(self, request, pk):
         vacancy = get_object_or_404(JobVacancy, id = pk)
@@ -586,13 +581,14 @@ class JobVacancyView(viewsets.ViewSet):
             pass
         user = request.user.profile
         if user == vacancy.posted_by:
-            serializer = JobVacanySerializer(vacancy, data = request.data, partial = True, context = {'request': request})
+            serializer = JobCreateVacanySerializer(vacancy, data = request.data, partial = True, context = {'request': request})
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status = status.HTTP_201_CREATED)
             return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
         return Response({'detail': 'Cannot edit job vacancies of other users.'}, status = status.HTTP_403_FORBIDDEN)
         # return Response({'detail': 'First close the job vacancy to edit.'}, status = status.HTTP_403_FORBIDDEN)
+        
     
     def destroy(self, request, pk):
         vacancy = get_object_or_404(JobVacancy, id = pk)
@@ -608,7 +604,7 @@ class VacancyApplyView(views.APIView):
             applicant = request.user.profile
             data['applied_by'] = applicant.id
             data['vacancy'] = vacancy.id
-            serializer = JobApplicationSerializer(data = data, context = {'request': request})
+            serializer = JobApplicationCreateSerializer(data = data, context = {'request': request})
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status = status.HTTP_201_CREATED)
@@ -624,8 +620,43 @@ class VacancyApplyView(views.APIView):
         except:
             return Response({'detail': 'Already not applied.'}, status = status.HTTP_204_NO_CONTENT)
 
-class VacancyBookmarkView(views.APIView):
+class AppliedVacancyGetView(views.APIView):
+        def get(self, request, vacancy_id = None):
+            user = request.user.profile
+            applications = JobApplication.objects.filter(applied_by = user).all()
+            serializer = JobApplicationSerializer(applications, many = True, context = {'request':request})
+            return Response(serializer.data, status = status.HTTP_200_OK)
     
+
+class VacancyReviewView(views.APIView):
+        def patch(self, request, vacancy_id, applicant_id):
+            application = JobApplication.objects.get(vacancy = vacancy_id, applied_by = applicant_id)
+            user = request.user.profile
+            choice = request.data['has_been_accepted']
+            if application.vacancy.posted_by == user:
+                if choice:
+                    application.has_been_accepted = True
+                    application.save()
+                    target = UserProfile.objects.get(id = applicant_id)
+                    Notification.objects.create(target = target, source = application.vacancy.posted_by, action = 'application_accepted', 
+                    detail = f'Your application to {application.vacancy.organization} for postion of {application.vacancy.title} has been accepted.',
+                    action_id = vacancy_id)
+                    return Response({'detail':'Application accepted.'}, status = status.HTTP_202_ACCEPTED)
+                elif choice == False:
+                    if application.has_been_accepted:
+                        try:
+                            Notification.objects.get(target = applicant_id, source = application.vacancy.posted_by,
+                                                 action = 'application_accepted', action_id = vacancy_id).delete()
+                        except:
+                            pass
+                    application.has_been_accepted = False
+                    application.save()
+                    return Response({'detail':'Application rejected.'}, status = status.HTTP_204_NO_CONTENT)
+                return Response({'detail':'Choice to accept/reject apllication not provided.'}, status = status.HTTP_400_BAD_REQUEST)
+            return Response({'detail':'Only employer can mark application.'}, status = status.HTTP_401_UNAUTHORIZED)
+    
+
+class VacancyBookmarkView(views.APIView):  
     def post(self, request, vacancy_id):
         vacancy = get_object_or_404(JobVacancy, id = vacancy_id)
         user = request.user.profile
@@ -641,9 +672,58 @@ class VacancyBookmarkView(views.APIView):
             vacancy.saved_by.remove(user)
             return Response({'detail': 'Bookmark removed.'}, status = status.HTTP_200_OK)
         return Response({'detail': 'No bookmark to vacncy found.'}, status = status.HTTP_400_BAD_REQUEST)
-
-
+    
+class VacancyBookmarkGetView(views.APIView):
+    def get(self, request):
+        user = request.user.profile
+        bookmarks = JobVacancy.objects.filter(saved_by = user)
+        serializer = JobVacanySerializer(bookmarks, many = True, context = {'request': request, 'user':user})
+        return Response(serializer.data, status = status.HTTP_200_OK)
+    
+class VacancyRecommendView(views.APIView):
+    def get(self, request):
+        user = request.user.profile
+        user_skills = json.decoder.JSONDecoder().decode(user.skills.skills_list)
+        query = JobVacancy.objects.all()
+        response = list()
+        if user_skills:
+            for vacancy in query:
+                try:
+                    for skill in vacancy.skills_required.split(','):
+                        # print('Django' in user_skills)
+                        if skill.strip() in user_skills:
+                            response.append(vacancy)
+                            print(skill.strip() in user_skills)
+                            break
+                except:
+                    continue
+            if len(response) < 5:
+                try:
+                    [response.append(query[count]) for count in range(7) if query[count] not in response]
+                except:
+                    pass
+            serializer = JobVacanySerializer(response, many = True, context = {'request': request, 'user':user})
+            return Response(serializer.data, status = status.HTTP_200_OK)
+        query = choice(query)
+        serializer = JobVacanySerializer(query, many = True, context = {'request': request, 'user':user})
+        return Response(serializer.data[:10], status = status.HTTP_200_OK)
+                
         
+# Search
+
+class JobSearchView(generics.ListAPIView):
+    queryset = JobVacancy.objects.all()
+    serializer_class = JobVacanySerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['skills_required', 'employment_type','title' ,'industry', 'description']
+    
+    def get_serializer_context(self):
+        # print(self.request.query_params.get('radius'))
+        context = super(JobSearchView, self).get_serializer_context()
+        context.update({"request": self.request, 'user': self.request.user.profile})
+        return context
+        
+
 
 
 

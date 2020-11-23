@@ -6,6 +6,32 @@ from userauth.models import User, UserProfile
 
 from userauth.serializers import UserProfileSerializer
 
+from django.utils import timezone
+
+
+class PostCreateSerializer(serializers.ModelSerializer):
+     class Meta:
+        model   = Post
+        fields  = '__all__'
+        
+class CommentCreateSerializer(serializers.ModelSerializer):
+     class Meta:
+        model   = Comment
+        fields  = '__all__'
+        
+class ReplyCreateSerializer(serializers.ModelSerializer):
+     class Meta:
+        model   = Reply
+        fields  = '__all__'
+        
+class VoteCreateSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model   = Vote
+        fields  = '__all__'
+
+
+
 def get_avatar(instance, context, query):
         try:
             profile = getattr(instance, query)
@@ -14,15 +40,45 @@ def get_avatar(instance, context, query):
             return url
         except:
             return None
-        
+
+def get_posted_at(query):
+        time = timezone.localtime(timezone.now()) - query
+        if time.days < 7:
+            if time.days == 0:
+                created_at = 'today'
+            elif time.days == 1:
+                created_at = 'yesterday'
+            else:
+                created_at = f'{time.days} days'
+        elif time.days < 30:
+            if int(time.days/7) == 1:
+                created_at = '1 week'
+            else:
+                created_at = f'{int(time.days/7)} weeks'
+        elif time.days < 365:
+            if int(time.days/30) == 1:
+                created_at = '1 month'
+            else:
+                created_at = f'{int(time.days/30)} months'
+        else:
+            if int(time.days/365) == 1:
+                created_at = '1 year'
+            else:
+                created_at = f'{int(time.days/365)} years'
+        return created_at  
+    
+    
 class PostSerializer(serializers.ModelSerializer):
+    is_liked_by_user = serializers.SerializerMethodField('get_is_liked')
+    is_saved_by_user = serializers.SerializerMethodField('get_is_saved')
 
     class Meta:
         model   = Post
-        fields  = ('id', 'text', 'posted_at', 'media_type', )
+        fields  = ('id', 'text', 'posted_at', 'media_type', 'is_liked_by_user', 'is_saved_by_user')
         
     def to_representation(self, instance):
         response = super().to_representation(instance)
+        response['posted_at'] = get_posted_at(instance.posted_at)
         response['media'] = self.get_post_media(instance)
         response['viewer_name'] = f'{self.context["user"].profile.first_name} {self.context["user"].profile.last_name}'
         response['viewer_avatar'] = get_avatar(self.context['user'], self.context, 'profile')
@@ -60,11 +116,24 @@ class PostSerializer(serializers.ModelSerializer):
         comments = instance.comments.all()
         query = list()
         for comment in comments:
-            comment_data = CommentSerializer(comment, context={'request': self.context.get('request')}).data
-            replies_data = ReplySerializer(comment.replies.all(), many = True, context={'request': self.context.get('request')}).data
+            comment_data = CommentSerializer(comment, context={'request': self.context.get('request'), 
+                                                               'user': self.context.get('user')}).data
+            replies_data = ReplySerializer(comment.replies.all(), many = True, context={'request': self.context.get('request'), 
+                                                                'user': self.context.get('user')}).data
             query.append({'comment':comment_data, 'replies':replies_data})
         return query
         
+    def get_is_liked(self, instance):
+        if instance.votes.filter(vote_type = 'like', voter = self.context['user'].profile):
+            return True
+        return False
+        
+    def get_is_saved(self, instance):
+        if self.context['user'].profile in instance.bookmarked_by.all():
+            return True
+        return False
+    
+    
         
 class VoteSerializer(serializers.ModelSerializer):
     
@@ -80,32 +149,48 @@ class VoteSerializer(serializers.ModelSerializer):
         return response
         
 class CommentSerializer(serializers.ModelSerializer):
+    is_liked_by_user = serializers.SerializerMethodField('get_is_liked')
     
     class Meta:
         model   = Comment
-        fields = '__all__'
+        fields = ('id','text','posted_at', 'post', 'commented_by', 'liked_by', 'is_liked_by_user', )
         
     def to_representation(self, instance):
         response = super().to_representation(instance)
+        response['posted_at'] = get_posted_at(instance.posted_at)
         response['likes_count']= instance.liked_by.count()
         response['author_id']= instance.commented_by.id
         response['author_name'] = f'{instance.commented_by.first_name} {instance.commented_by.last_name}'
         response['author_avatar'] = get_avatar(instance, self.context, 'commented_by')
         response['author_tagline'] = instance.commented_by.social_profile.tagline
         return response
+    
+        
+    def get_is_liked(self, instance):
+        if self.context['user'].profile in instance.liked_by.all():
+            return True
+        return False
+        
         
 class ReplySerializer(serializers.ModelSerializer):
+    is_liked_by_user = serializers.SerializerMethodField('get_is_liked')
     
     class Meta:
         model   = Reply
-        fields  = '__all__'
+        fields = ('id','text','posted_at', 'comment', 'replied_by', 'liked_by', 'is_liked_by_user', )
         
     def to_representation(self, instance):
         response = super().to_representation(instance)
+        response['posted_at'] = get_posted_at(instance.posted_at)
         response['likes_count']= instance.liked_by.count()
         response['author_id']= instance.replied_by.id
         response['author_name'] = f'{instance.replied_by.first_name} {instance.replied_by.last_name}'
         response['author_avatar'] = get_avatar(instance, self.context, 'replied_by')
         response['author_tagline'] =  instance.replied_by.social_profile.tagline
         return response
+    
+    def get_is_liked(self, instance):
+        if self.context['user'].profile in instance.liked_by.all():
+            return True
+        return False
         

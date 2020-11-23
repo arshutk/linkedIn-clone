@@ -31,4 +31,5 @@ urlpatterns = [
     path('user/organization/', include('organization.urls')),
     path('user/post/', include('post.urls')),
     path('chat/', include('chat.urls')),
+    path('notifications/', include('notification.urls')),
 ] + static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)

@@ -138,27 +138,80 @@ class ProfileViewSerializer(serializers.HyperlinkedModelSerializer):
         model   = ProfileView
         fields  = '__all__'
         
-    # def to_representation(self,instance):
-        # response = super().to_representation(instance)
-        # response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
-        # response['profile'] = SocialProfileSerializer(instance.profile, context = {'request': self.context.get('request')}).data
-        # return response
-        
 class JobVacanySerializer(serializers.ModelSerializer):
-
+    vacancy_id = serializers.CharField(source = 'id')
+    # logo = serializers.CharField(source = 'file_linked')
+    class Meta:
+        model   = JobVacancy
+        fields  = ('vacancy_id', 'title', 'organization', 'location','employment_type',
+                   'description', 'skills_required', 'posted_at', 'industry',
+                   'pay_range','file_linked', 'description',)
+        
+    def to_representation(self,instance):
+        response = super().to_representation(instance)
+        response['num_of_applicants'] = instance.applicants.count()
+        response['applicants'] = self.get_applicants_info(instance)
+        response['is_my_posted_vacancy'] = self.context['user'] == instance.posted_by
+        response['is_bookmarked'] = self.context['user'] in instance.saved_by.all()
+        response['has_applied'] = self.context['user'] in instance.applicants.all()
+        return response
+    
+    def get_applicants_info(self, instance):
+        applicants = instance.applicants.all()
+        response = list()
+        for applicant in applicants:
+            applicant_id = applicant.id
+            applicant_name = f'{applicant.first_name} {applicant.last_name}'
+            applicant_avatar = self.get_applicant_avatar(instance)
+            applicant_tagline = applicant.social_profile.tagline
+            has_been_accepted = JobApplication.objects.get(applied_by = applicant, vacancy = instance).has_been_accepted
+            response.append({'applicant_id': applicant_id,'applicant_name':applicant_name, 
+                             'applicant_avatar':applicant_avatar, 'applicant_tagline':applicant_tagline,
+                             'has_been_accepted':has_been_accepted})
+        return response
+    
+    def get_applicant_avatar(self, instance):
+        try:
+            name = instance.applicant.avatar.url
+            url  = self.context['request'].build_absolute_uri(name)
+            return url
+        except:
+            return None
+        
+        
+class JobCreateVacanySerializer(serializers.ModelSerializer):
     class Meta:
         model   = JobVacancy
         fields  = '__all__'
-    
-    def to_representation(self,instance):
-        response = super().to_representation(instance)
-        response['saved_by'] = UserProfileSerializer(instance.saved_by, many = True, context = {'request': self.context.get('request')}).data
-        response['viewed_by'] = UserProfileSerializer(instance.viewed_by, many = True, context = {'request': self.context.get('request')}).data
-        response['applicants'] = UserProfileSerializer(instance.applicants, many = True, context = {'request': self.context.get('request')}).data
-        return response
 
 
 class JobApplicationSerializer(serializers.ModelSerializer):
+    application_id = serializers.CharField(source = 'id')
+
+    class Meta:
+        model   = JobApplication
+        fields  = ('application_id','has_been_accepted')
+    
+    def to_representation(self,instance):
+        response = super().to_representation(instance)
+        response['vacancy_id'] = instance.vacancy.id
+        response['title'] = instance.vacancy.title
+        response['organization'] = instance.vacancy.organization
+        response['location'] = instance.vacancy.location
+        response['is_remote'] = instance.vacancy.is_remote
+        response['logo'] = self.get_logo(instance)
+        return response
+    
+    def get_logo(self, instance):
+        try:
+            name = instance.vacancy.file_linked.url
+            url  = self.context['request'].build_absolute_uri(name)
+            return url
+        except:
+            return None
+        
+        
+class JobApplicationCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model   = JobApplication

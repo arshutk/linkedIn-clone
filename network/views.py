@@ -83,34 +83,19 @@ class ConnectionSenderView(views.APIView):
             
        
 class PendingConnectionRequestView(views.APIView):   
-        
-    def get(self, request, filter):
-        receiver     = get_object_or_404(UserProfile, id = request.user.profile.id)
-        if filter == 'received':
-            connections     = Connection.objects.filter(receiver = receiver, has_been_accepted = False, is_visible = True)
-            if connections.exists():
-                data = list()
-                for connection in connections:
-                    record   =  dict()
-                    record['connection_id'] = connection.id
-                    record['profile_id'] = connection.sender.id
-                    record['sender_name']   = f'{connection.sender.first_name} {connection.sender.last_name}'
-                    record['sender_avatar']   = request.build_absolute_uri(connection.sender.avatar.url)
-                    record['sender_tagline']   = connection.sender.social_profile.tagline
-        else:
-            if filter == 'sent':
-                connections     = Connection.objects.filter(sender = receiver, has_been_accepted = False, is_visible = True)
-                if connections.exists():
-                    data = list()
-                    for connection in connections:
-                        record   =  dict()
-                        record['connection_id'] = connection.id
-                        record['profile_id'] = connection.receiver.id
-                        record['receiver_name']   = f'{connection.receiver.first_name} {connection.receiver.last_name}'
-                        record['receiver_avatar']   = request.build_absolute_uri(connection.receiver.avatar.url)
-                        record['receiver_tagline']   = connection.receiver.social_profile.tagline
-            else:
-                return Response({'detail': "Given search query is not acceptable."}, status=status.HTTP_400_BAD_REQUEST)
+    def get_data(self, connections, user):
+        data = list()
+        for connection in connections:
+            record   =  dict()
+            record['connection_id'] = connection.id
+            record['profile_id'] = getattr(connection, user).id
+            record['profile_id'] = getattr(connection, user).id
+            record['connection_name']   = f'{getattr(connection, user).first_name} {getattr(connection, user).last_name}'
+            try:
+                record['connection_avatar']   = self.request.build_absolute_uri(getattr(connection, user).avatar.url)
+            except:
+                record['connection_avatar'] = None
+            record['connection_tagline']   = getattr(connection, user).social_profile.tagline
             time = timezone.localtime(timezone.now()) - connection.date_time 
             if time.days < 7:
                 if time.days == 0:
@@ -120,25 +105,43 @@ class PendingConnectionRequestView(views.APIView):
                 else:
                     record['time_elapsed'] = f'{time.days} days'
             elif time.days < 30:
-                if time.days % 7 == 1:
+                if int(time.days/7) == 1:
                     record['time_elapsed'] = '1 week'
                 else:
-                    record['time_elapsed'] = f'{time.days % 7} weeks'
+                    record['time_elapsed'] = f'{int(time.days/7)} weeks'
             elif time.days < 365:
-                if time.days % 30 == 0:
+                if int(time.days/30) == 1:
                     record['time_elapsed'] = '1 month'
                 else:
-                    record['time_elapsed'] = f'{time.days % 30} weeks'
+                    record['time_elapsed'] = f'{int(time.days/30)} months'
             else:
-                if time.days % 365 == 0:
+                if int(time.days/365) == 1:
                     record['time_elapsed'] = '1 year'
                 else:
-                    record['time_elapsed'] = f'{time.days % 365} years'
+                    record['time_elapsed'] = f'{int(time.days/365)} years'
             data.append(record.copy())
-            return Response(data, status=status.HTTP_200_OK)
-        return Response({'detail': "No requests found."}, status=status.HTTP_204_NO_CONTENT)
+        return data
+        
+    def get(self, request, filter = None):
+        receiver     = get_object_or_404(UserProfile, id = request.user.profile.id)
+        if filter == 'received':
+            connections     = Connection.objects.filter(receiver = receiver, has_been_accepted = False, is_visible = True)
+            print(connections.exists())
+            if connections.exists():
+                response = self.get_data(connections, 'sender')
+                return Response(response, status=status.HTTP_200_OK)
+            return Response({'detail': "No request found."}, status=status.HTTP_204_NO_CONTENT)
+        else:
+            if filter == 'sent':
+                connections     = Connection.objects.filter(sender = receiver, has_been_accepted = False, is_visible = True) 
+                if connections.exists():
+                    response = self.get_data(connections, 'receiver')
+                    return Response(response, status=status.HTTP_200_OK)
+                return Response({'detail': "No request found."}, status=status.HTTP_404_NOT_FOUND)
+            else:    
+                return Response({'detail': "Search with relevent filters."}, status=status.HTTP_204_NO_CONTENT)
     
-    def patch(self, request):
+    def patch(self, request, filter = None):
         try:
             connection_id       = request.data.get('connection_id')
             connection          = Connection.objects.get(id = connection_id)
@@ -154,6 +157,7 @@ class PendingConnectionRequestView(views.APIView):
             return Response({'detail':'User already added to your network.'}, status = status.HTTP_226_IM_USED)
         return Response({'detail':'You can\'t manage network of other users.' },status = status.HTTP_401_UNAUTHORIZED)        
  
+ 
 class ConnectionDeleteView(views.APIView):
 
     def delete(self, request, connection_id):
@@ -166,16 +170,17 @@ class ConnectionDeleteView(views.APIView):
             if receiver == requesting_user:
                 if connection and connection.has_been_accepted:
                     connection.delete()
-                    connection.receiver.followers.delete(connection.sender)
-                    connection.sender.followers.delete(connection.receiver)
+                    connection.receiver.followers.remove(connection.sender)
+                    connection.sender.followers.remove(connection.receiver)
                     return Response({'detail': "Connection deleted"}, status=status.HTTP_204_NO_CONTENT)
-                connection.is_visible = False
-                connection.save()
+                # connection.is_visible = False
+                # connection.save()
+                connection.delete()
                 return Response({'detail': "Connection request has been removed."}, status=status.HTTP_202_ACCEPTED)
             if connection and connection.has_been_accepted: # For sender
                 connection.delete()
-                connection.receiver.followers.delete(connection.sender)
-                connection.sender.followers.delete(connection.receiver)
+                connection.receiver.followers.remove(connection.sender)
+                connection.sender.followers.remove(connection.receiver)
                 return Response({'detail': "Connection deleted"}, status=status.HTTP_204_NO_CONTENT)
             connection.delete()
             return Response({'detail': "Connection request deleted."}, status=status.HTTP_202_ACCEPTED)
@@ -183,23 +188,27 @@ class ConnectionDeleteView(views.APIView):
                 
 
 class NetworkView(views.APIView):
+    def get_data(self, connection, query, user):
+        del connection[user]
+        connection['profile_id'] = getattr(query, user).id
+        connection['connection_name'] = f'{getattr(query, user).first_name} {getattr(query, user).last_name}'
+        try:
+            connection['connection_avatar'] = self.request.build_absolute_uri(getattr(query, user).avatar.url)
+        except:
+            connection['connection_avatar'] = None
+        connection['connection_tagline'] = getattr(query, user).social_profile.tagline
+        return None
     
     def get(self, request):
         user    = get_object_or_404(UserProfile, id = request.user.profile.id)
         data    = Connection.objects.filter(sender = user, has_been_accepted = True) | Connection.objects.filter(receiver = user, has_been_accepted = True)
         connections  = ConnectionSerializer(data, many = True, context={'request': request}).data
         for connection in connections:
-            query = Connection.objects.get(pk = connection['id'])
+            query = Connection.objects.get(pk = connection['connection_id'])
             if connection['sender'] == user.id:
-                del connection['receiver']
-                connection['sender_name'] = f'{query.receiver.first_name} {query.receiver.last_name}'
-                connection['sender_avatar'] = request.build_absolute_uri(query.receiver.avatar.url)
-                connection['sender_tagline'] = query.receiver.social_profile.tagline
+                self.get_data(connection, query, 'receiver')
             else:
-                del connection['sender']    
-                connection['receiver_name'] = f'{query.sender.first_name} {query.sender.last_name}'
-                connection['receiver_avatar'] = request.build_absolute_uri(query.sender.avatar.url)
-                connection['receiver_tagline'] = query.sender.social_profile.tagline
+                self.get_data(connection, query, 'sender')
         return Response(connections, status=status.HTTP_200_OK) 
     
 
