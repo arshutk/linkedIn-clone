@@ -3,6 +3,7 @@ from django.shortcuts import render
 from rest_framework import views, generics
 
 from userauth.models import User, UserProfile
+
 from userauth.serializers import UserSerializer, UserProfileSerializer
 
 from network.models import Connection
@@ -25,14 +26,6 @@ import json
 
 
 class FollowView(views.APIView):
-    
-    
-    def get_user(self, profile_id):
-        try:
-            return UserProfile.objects.get(id = profile_id)
-        except:
-            raise Http404
-    
     def post(self, request, profile_id):
         user        = get_object_or_404(UserProfile, id = profile_id)
         follower    = request.user.profile
@@ -80,7 +73,7 @@ class ConnectionSenderView(views.APIView):
                     return Response(serializer.data, status = status.HTTP_202_ACCEPTED)
                 return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
             return Response({'detail': "Can't connect with yourself."}, status = status.HTTP_226_IM_USED)
-            
+        
        
 class PendingConnectionRequestView(views.APIView):   
     def get_data(self, connections, user):
@@ -123,23 +116,23 @@ class PendingConnectionRequestView(views.APIView):
         return data
         
     def get(self, request, filter = None):
-        receiver     = get_object_or_404(UserProfile, id = request.user.profile.id)
+        user = get_object_or_404(UserProfile, id = request.user.profile.id)
+        
         if filter == 'received':
-            connections     = Connection.objects.filter(receiver = receiver, has_been_accepted = False, is_visible = True)
-            print(connections.exists())
+            connections = Connection.objects.filter(receiver = user, has_been_accepted = False, is_visible = True)
             if connections.exists():
                 response = self.get_data(connections, 'sender')
                 return Response(response, status=status.HTTP_200_OK)
-            return Response({'detail': "No request found."}, status=status.HTTP_204_NO_CONTENT)
+            return Response({'detail': "No request found."}, status=status.HTTP_404_NOT_FOUND)
         else:
             if filter == 'sent':
-                connections     = Connection.objects.filter(sender = receiver, has_been_accepted = False, is_visible = True) 
+                connections     = Connection.objects.filter(sender = user, has_been_accepted = False, is_visible = True)
                 if connections.exists():
                     response = self.get_data(connections, 'receiver')
                     return Response(response, status=status.HTTP_200_OK)
                 return Response({'detail': "No request found."}, status=status.HTTP_404_NOT_FOUND)
             else:    
-                return Response({'detail': "Search with relevent filters."}, status=status.HTTP_204_NO_CONTENT)
+                return Response({'detail': "Search with relevent filters."}, status=status.HTTP_400_BAD_REQUEST)
     
     def patch(self, request, filter = None):
         try:
@@ -159,7 +152,6 @@ class PendingConnectionRequestView(views.APIView):
  
  
 class ConnectionDeleteView(views.APIView):
-
     def delete(self, request, connection_id):
         connection       = get_object_or_404(Connection, id = connection_id)
         receiver         = connection.receiver

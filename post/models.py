@@ -23,7 +23,7 @@ class Post(models.Model):
    written_by        = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="articles")  
    bookmarked_by     = models.ManyToManyField(UserProfile, related_name="bookmarked_posts", blank = True)
    posted_at         = models.DateTimeField(auto_now_add = True)
-   
+      
    def __str__(self):
       return f'{self.written_by.first_name} {self.written_by.last_name} : {self.text[:30]}'
     
@@ -75,3 +75,11 @@ class Reply(models.Model):
    class Meta:
       ordering = ('-posted_at',)
       
+
+class Hashtag(models.Model):
+   topic       = models.CharField(max_length = 50)
+   time        = models.DateTimeField(auto_now_add = True)
+   
+   def __str__(self):
+      return f'{self.topic} {self.time.date()}'
+   

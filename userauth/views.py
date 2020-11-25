@@ -28,7 +28,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.utils import timezone
 
-from network.models import Network, Connection
+from network.models import Connection
 
 from rest_framework import filters
 
@@ -129,10 +129,7 @@ class UserProfileCreateView(views.APIView):
         
     def post(self, request, user_id):
         data = request.data.copy()
-        print(data['is_employed'])
-        print(type(data['is_employed']))
         data['user'] = user_id
-        # print(request.data)
         serializer = UserProfileSerializer(data = data, context={'request': request})
         if serializer.is_valid(): 
             serializer.save()
@@ -145,8 +142,7 @@ class UserProfileCreateView(views.APIView):
                 
                 SocialProfile.objects.create(user = self.get_user(serializer.data['id']), 
                                                 tagline = f"{data['position']} at {data['organization_name']}",
-                                                current_industry = self.get_industry(serializer.data['id']))     
-                Network.objects.create(user = self.get_user(serializer.data['id']),)                             
+                                                current_industry = self.get_industry(serializer.data['id']))                                
                 return Response(serializer.data, status = status.HTTP_201_CREATED)
             Education.objects.create(user = self.get_user(serializer.data['id']), 
                                              organization_name = f"{data['organization_name']}",
@@ -156,14 +152,11 @@ class UserProfileCreateView(views.APIView):
             SocialProfile.objects.create(user = self.get_user(serializer.data['id']), 
                                             tagline = f"{data['position']} at {data['organization_name']}",
                                             current_academia = self.get_academia(serializer.data['id']))
-            
-            Network.objects.create(user = self.get_user(serializer.data['id']),)
             return Response(serializer.data, status = status.HTTP_201_CREATED)
         return Response(serializer.errors, status = status.HTTP_201_CREATED)
     
     
     def patch(self, request, user_id = None):
-        
         try:
             data                = request.data.copy()
             profile_id          = data['profile_id']
@@ -189,7 +182,6 @@ class UserProfileCreateView(views.APIView):
     
 class UserProfileView(views.APIView):
     serializer_class = UserProfileSerializer
-    
     
     def get(self, request, profile_id):
         try:

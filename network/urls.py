@@ -22,6 +22,6 @@ urlpatterns = [
     
     path('view/connections/', views.NetworkView.as_view()),
     
-    # path('view/archived/request/', views.NetworkView.as_view()),
+    path('view/archived/request/', views.NetworkView.as_view()),
     
 ] 

@@ -205,12 +205,12 @@ class TestScoreViewset(viewsets.ModelViewSet):
 class SkillView(views.APIView):
     
     def get(self, request, profile_id = None):
-        
         user = get_object_or_404(UserProfile, id = profile_id)
         try:
             query = user.skills  
         except:
-            raise Http404
+            # raise Http404
+            return Response('no response', status = status.HTTP_404_NOT_FOUND)
         
         serializer = SkillSerializer(query, context = {'request': request})
         return Response(serializer.data, status = status.HTTP_200_OK)
@@ -298,7 +298,6 @@ class SkillUpdateView(views.APIView):
                 return Response({'detail':'Please select only top three skills to feature.'}, status = status.HTTP_400_BAD_REQUEST)   
             return Response({'detail':'Featured Skills list has not been changed.'}, status = status.HTTP_304_NOT_MODIFIED)
         return Response({'detail':'Some skill/s in featured list is/are not in added skill.'}, status = status.HTTP_304_NOT_MODIFIED)
-    
     
     def delete(self, request, skill_id):
         Skill.objects.get(id = skill_id).delete()
@@ -420,7 +419,6 @@ class BannerView(views.APIView):
     
     def get(self, request, profile_id = None):
         user = get_object_or_404(UserProfile, id = profile_id)
-        
         viewer = get_object_or_404(UserProfile, id = request.user.profile.id)
 
         if viewer != user:
@@ -683,7 +681,10 @@ class VacancyBookmarkGetView(views.APIView):
 class VacancyRecommendView(views.APIView):
     def get(self, request):
         user = request.user.profile
-        user_skills = json.decoder.JSONDecoder().decode(user.skills.skills_list)
+        try:
+            user_skills = json.decoder.JSONDecoder().decode(user.skills.skills_list)
+        except:
+            user_skills = None
         query = JobVacancy.objects.all()
         response = list()
         if user_skills:

@@ -36,5 +36,7 @@ urlpatterns = [
     #search
     path('', views.PostSearchView.as_view()),
     
+    path('hashtags/', views.HashtagView.as_view()),
+    
 ] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
 

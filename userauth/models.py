@@ -85,8 +85,6 @@ class User(AbstractBaseUser):
     @property
     def is_active(self):
         return self.active
-
-
     
 class UserProfile(models.Model):
 
@@ -98,6 +96,8 @@ class UserProfile(models.Model):
     phone_number        = models.CharField(max_length = 10, blank = True)
     
     is_online           = models.BooleanField(default = False)
+    
+    followers           = models.ManyToManyField('self', related_name ='followers', blank = True)
     
     def __str__(self):
         return f'{self.first_name} {self.last_name}'

@@ -71,9 +71,7 @@ class UserSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         password  = validated_data.pop('password')
-        
         user = User(**validated_data)
-        
         user.set_password(password)
         user.save()
         
@@ -82,16 +80,11 @@ class UserSerializer(serializers.ModelSerializer):
          
     
 class UserProfileSerializer(serializers.ModelSerializer):
-
     
     class Meta:
         model   = UserProfile
         fields  = '__all__'
         
-    # def to_representation(self,instance):
-    #     response = super().to_representation(instance)
-    #     response['user'] = UserSerializer(instance.user, context = {'request': self.context.get('request')}).data
-    #     return response
 
 class UserProfileSearchSerailizer(serializers.Serializer):
     profile_id = serializers.CharField(source = 'id')

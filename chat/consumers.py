@@ -8,9 +8,9 @@ from channels.consumer import AsyncConsumer
 
 from chat.models import Thread, Chat
 
-from chat.serializers import ChatSerializer
+from chat.serializers import ThreadSerializer, ChatSerializer
 
-from network.models import Network, Connection
+from network.models import Connection
 
 
 class ChatConsumer(AsyncConsumer):
@@ -77,10 +77,12 @@ class ChatConsumer(AsyncConsumer):
     
     @database_sync_to_async
     def create_chat(self, sender_id, thread_id, text):
-        chat = Chat.objects.create(sender_id = sender_id, thread_id = thread_id, text = text)
-        serializer = ChatSerializer(chat)
-        # return json.dumps({"messsage" : serializer.data})
-        return text
+        serializer = ChatSerializer(data = {'sender' : sender_id, 'thread' : thread_id, 'text' : text})
+        if serializer.is_valid():
+            serializer.save()
+            # return json.dumps({"messsage" : serializer.data})
+            return text
+        return serializer.errors
     
     @database_sync_to_async
     def get_thread(self, sender_id, receiver_id):
@@ -88,8 +90,11 @@ class ChatConsumer(AsyncConsumer):
                  Thread.objects.filter(first_member_id = receiver_id, second_member_id = sender_id)
         if thread.exists():
             return thread[0].id
-        thread = Thread.objects.create(first_member_id = sender_id, second_member_id = receiver_id)
-        return thread.id
+        serializer = ThreadSerializer(data = {'first_member' : sender_id, 'second_member' : receiver_id})
+        if serializer.is_valid():
+            serializer.save()
+            return serializer.data.id
+        return serializer.errors
         
     async def send_recent_message(self, event):
         await self.send({

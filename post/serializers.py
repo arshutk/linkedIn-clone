@@ -194,3 +194,16 @@ class ReplySerializer(serializers.ModelSerializer):
             return True
         return False
         
+# class TrendingSerializer(serializers.ModelSerializer):
+#     topic = TrendingSerializer(many = True)
+    
+#     class Meta:
+#         model = Trending
+#         fields = ('topic', 'time')
+        
+#     def create(self, validated_data):
+#         tracks_data = validated_data.pop('tracks')
+#         topic = Trending.objects.create(**validated_data)
+#         for track_data in tracks_data:
+#             Track.objects.create(album=album, **track_data)
+#         return album

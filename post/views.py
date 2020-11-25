@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from post.models import Post, Vote, Comment, Reply
+from post.models import Post, Vote, Comment, Reply, Hashtag
 
 from post.serializers import PostSerializer, VoteSerializer, CommentSerializer, ReplySerializer, \
                              PostCreateSerializer, VoteCreateSerializer, CommentCreateSerializer, ReplyCreateSerializer
@@ -25,6 +25,13 @@ from rest_framework import filters
 
 from notification.models import Notification
 
+import re
+
+from django.utils import timezone
+
+from django.db.models import Count    
+
+from django.http import JsonResponse
 
 class PostView(views.APIView):
     serializer_class = PostCreateSerializer    
@@ -38,20 +45,29 @@ class PostView(views.APIView):
                 data['image_linked'] = data['media']
                 serializer = PostCreateSerializer(data = data, context = {'request': request})
                 if serializer.is_valid():
-                    serializer.save()  
+                    serializer.save()
+                    topics = set(re.findall(r'\B#\w*[a-zA-Z]+\w*', data['text']))
+                    for topic in topics:
+                        Hashtag.objects.create(topic = topic)   
                     return Response(serializer.data, status = status.HTTP_201_CREATED)
                 return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
             elif media_type == 'video':
                 data['video_linked'] = data['media']
                 serializer = PostCreateSerializer(data = data, context = {'request': request})
                 if serializer.is_valid():
-                    serializer.save()  
+                    serializer.save() 
+                    topics = set(re.findall(r'\B#\w*[a-zA-Z]+\w*', data['text']))
+                    for topic in topics:
+                        Hashtag.objects.create(topic = topic) 
                     return Response(serializer.data, status = status.HTTP_201_CREATED)
                 return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
         # here
         serializer = PostCreateSerializer(data = data, context = {'request': request})
         if serializer.is_valid():
-            serializer.save()  
+            serializer.save()
+            topics = set(re.findall(r'\B#\w*[a-zA-Z]+\w*', data['text']))
+            for topic in topics:
+                Hashtag.objects.create(topic = topic)   
             return Response(serializer.data, status = status.HTTP_201_CREATED)
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
@@ -84,9 +100,7 @@ class VoteGetView(views.APIView):
     
     
 class VotePostView(views.APIView):
-
     def post(self, request, post_id, vote_type):
-        
         post = get_object_or_404(Post, id = post_id)
         choice  = request.data.get('vote')
         user    = request.user.profile 
@@ -119,14 +133,7 @@ class VotePostView(views.APIView):
         return Response({'detail':'Post must be upvoted first.'},status=status.HTTP_400_BAD_REQUEST)
 
 
-class BookmarkView(views.APIView):
-    
-    def get_post(self, post_id):
-        try:
-            return Post.objects.get(id = post_id)
-        except:
-            raise Http404
-        
+class BookmarkView(views.APIView):       
     def post(self, request, post_id):
         print(request.data)
         post = get_object_or_404(Post, id = post_id)
@@ -259,6 +266,14 @@ class ReplyUpdateView(views.APIView):
             return Response(serializer.data, status = status.HTTP_202_ACCEPTED)
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
+class HashtagView(views.APIView):
+    def get(self, request):
+        query = Hashtag.objects.filter(time__gte = timezone.localtime(timezone.now()) - timezone.timedelta(days = 5)).\
+                values('topic').annotate(Count('topic')).order_by('-topic__count')
+        return JsonResponse(list(query), safe=False)
+        
+        
+
 
 class FeedView(views.APIView):
     def get_commented_post(self, following):
@@ -275,8 +290,6 @@ class FeedView(views.APIView):
                 query.append(vote.post)
         return query
                 
-            
-    
     def get(self, request):  
         user = request.user.profile
         user_following = UserProfile.objects.filter(followers = user).all()

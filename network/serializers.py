@@ -10,4 +10,6 @@ class ConnectionSerializer(serializers.ModelSerializer):
     
     class Meta:
         model   = Connection
-        fields  = ('connection_id','date_time', 'has_been_accepted','is_visible','receiver','sender' )  
+        fields  = ('connection_id','date_time', 'has_been_accepted','is_visible','receiver','sender')  
+        
+        
