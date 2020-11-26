@@ -6,7 +6,7 @@ from profile.models import  WorkExperience, Education, LicenseAndCertification, 
 
 from profile.serializers import WorkExperienceSerializer, EducationSerializer, LicenseAndCertificationSerializer, \
                                 VolunteerExperienceSerializer, CourseSerializer, ProjectSerializer, TestScoreSerializer, \
-                                SkillSerializer, SocialProfileSerializer, ProfileViewSerializer, JobCreateVacanySerializer, \
+                                SkillSerializer, EndorsementSerializer, SocialProfileSerializer, ProfileViewSerializer, JobCreateVacanySerializer, \
                                 JobApplicationCreateSerializer, JobApplicationSerializer, JobVacanySerializer
 
 from rest_framework import views, generics, viewsets
@@ -209,13 +209,10 @@ class SkillView(views.APIView):
         try:
             query = user.skills  
         except:
-            # raise Http404
-            return Response('no response', status = status.HTTP_404_NOT_FOUND)
-        
+            raise Http404
         serializer = SkillSerializer(query, context = {'request': request})
         return Response(serializer.data, status = status.HTTP_200_OK)
     
-        
     def post(self, request, profile_id = None):
         data            = request.data.copy()
         skills          = request.data.get('skills_list')
@@ -239,7 +236,8 @@ class SkillView(views.APIView):
                 return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
             return Response({'detail':'Skills list must not be empty.'}, status = status.HTTP_400_BAD_REQUEST)
         return Response({'detail':'Provide id.'}, status = status.HTTP_400_BAD_REQUEST)
-
+    
+    
 class SkillUpdateView(views.APIView):
 
     def put(self, request, skill_id):
@@ -302,6 +300,33 @@ class SkillUpdateView(views.APIView):
     def delete(self, request, skill_id):
         Skill.objects.get(id = skill_id).delete()
         return Response({'detail':'Deleted'}, status = status.HTTP_204_NO_CONTENT)
+
+
+class SkillEndorsementView(views.APIView):
+    
+    def post(self, request, skill_id):
+        user = request.user.profile
+        data = request.data.copy()
+        endorsed_skill = request.data.get('skill_name')
+        
+        skill = get_object_or_404(Skill, id = skill_id)   
+        skills_list = json.decoder.JSONDecoder().decode(skill.skills_list)
+        
+        for endorsement in skill.endorsement.all():
+            if endorsed_skill == endorsement.skill_name and user == endorsement.user:
+                return Response({'detail':'Cannot endorse a skill twice.'}, status = status.HTTP_406_NOT_ACCEPTABLE)
+
+        if endorsed_skill:
+            if endorsed_skill in skills_list:
+                data['skill'] = skill_id
+                data['user'] = user.id
+                serializer = EndorsementSerializer(data = data, context = {'request': request})
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data, status = status.HTTP_201_CREATED)
+                return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'Can\'t endorse skill that has not yet been added.'}, status = status.HTTP_403_FORBIDDEN)
+        return Response({'detail': 'Provide the skill that has to be endorsed.'}, status = status.HTTP_403_FORBIDDEN)
 
 
 class GetWorkView(views.APIView):

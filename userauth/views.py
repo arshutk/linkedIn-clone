@@ -133,7 +133,8 @@ class UserProfileCreateView(views.APIView):
         serializer = UserProfileSerializer(data = data, context={'request': request})
         if serializer.is_valid(): 
             serializer.save()
-            if data.get('is_employed') == 'True':
+            if data.get('is_employed') == 'true':
+                print('here')
                 WorkExperience.objects.create(user = self.get_user(serializer.data['id']), 
                                              organization_name = f"{data['organization_name']}", 
                                              position = data['position'], 

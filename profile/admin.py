@@ -9,7 +9,18 @@ admin.site.register(models.Education)
 # admin.site.register(models.Course)
 # admin.site.register(models.Project)
 # admin.site.register(models.TestScore)
-admin.site.register(models.Skill)
+
+class EndorsementInline(admin.TabularInline):
+    model = models.Endorsement
+
+class SkillAdmin(admin.ModelAdmin):
+    inlines = [
+        EndorsementInline,
+    ]
+
+
+admin.site.register(models.Skill, SkillAdmin)
+
 admin.site.register(models.SocialProfile)
 admin.site.register(models.ProfileView)
 admin.site.register(models.JobVacancy)

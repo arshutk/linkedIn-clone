@@ -1,7 +1,7 @@
 from rest_framework import serializers, exceptions, fields
 
 from profile.models import WorkExperience, Education, LicenseAndCertification, VolunteerExperience, Course, Project,\
-                           TestScore, Skill, SocialProfile, ProfileView, JobVacancy, JobApplication
+                           TestScore, Skill, Endorsement, SocialProfile, ProfileView, JobVacancy, JobApplication
 
 from userauth.models import User, UserProfile
 
@@ -99,12 +99,9 @@ class TestScoreSerializer(serializers.ModelSerializer):
         return response
   
   
-    
-from profile.models import SKILLS
 
 class SkillSerializer(serializers.ModelSerializer):
     
-    # skills_list        = fields.MultipleChoiceField(choices = SKILLS)   
     class Meta:
         model   = Skill
         fields  = '__all__'
@@ -113,9 +110,16 @@ class SkillSerializer(serializers.ModelSerializer):
         response = super().to_representation(instance)
         response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data['id']
         response['top_skills'] = json.decoder.JSONDecoder().decode(instance.top_skills)
-        # Temporary (remove later)
         response['skills_list'] = json.decoder.JSONDecoder().decode(instance.skills_list)
         return response
+    
+
+class EndorsementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model   = Endorsement
+        fields  = '__all__'
+    
+        
     
     
 class SocialProfileSerializer(serializers.ModelSerializer):

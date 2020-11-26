@@ -159,45 +159,29 @@ class TestScore(models.Model):
     
     
         
-# Skills
-
-from multiselectfield import MultiSelectField
-
-SKILLS = (    ('Tools & Technology', (('C++', 'C++'), ('Python', 'Python'), ('Django', 'Django'), 
-                             ('Java', 'Java'), ('Flutter', 'Flutter'), ('React', 'React'),
-                             ('Android Development', 'Android Development'), ('Angular', 'Angular'), ('Flask', 'Flask'),
-                             ('HTML', 'HTML'), ('CSS', 'CSS'), ('SASS', 'SASS'),
-                             ('Bootstrap', 'Bootstrap'), ('Ruby', 'Ruby'), ('C#', 'C#'),
-                             ('Spring', 'Spring'), ('Laraval', 'Laraval'), ('PHP', 'PHP'),
-                             ('Node', 'Node'), ('Git', 'Git'), ('GitHub', 'GitHub'),
-                             ('ASP.NET', 'ASP.NET'), ('Machine Learning', 'Machine Learning'), ('Big Data', 'Big Data'),
-                             )),
-          
-              ('Interpersonal', (('Leadership', 'Leadership'), ('Team Management', 'Team Management'), ('Resource Management', 'Resource Management'),
-                                 ('Team Building', 'Team Building'), ('Teamwork', 'Teamwork'), ('Public Speaking', 'Public Speaking'),
-                                 ('Communication', 'Communication'), ('Writing', 'Writing'), ('Collaborative Problem Solving', 'Collaborative Problem Solving'),
-                                 ('Strategic Negotiations', 'Strategic Negotiations'), ('Customer Service', 'Customer Service'),
-                                )),
-)
-      
+# Skills      
  
 class Skill(models.Model):
 
     user                = models.OneToOneField(UserProfile, on_delete = models.CASCADE, related_name ='skills')
-    # skills_list         = MultiSelectField(choices = SKILLS, max_length = 300, null = True, blank = True) 
-    
-    # Temporary
     skills_list         = models.TextField()
-    
     top_skills          = models.TextField(blank = True, null = True)
-    # endorsement         = models.ManyToManyField(UserProfile, related_name = "", blank = True )
+    endorsed_by         = models.ManyToManyField(UserProfile, through = 'Endorsement')
+    
     def __str__(self):
         return f'{self.user.first_name} {self.user.last_name} : {self.top_skills}'
         
     class Meta:
         verbose_name = 'Skill'
         verbose_name_plural = 'Skills'
+        
+class Endorsement(models.Model):
+    skill               = models.ForeignKey(Skill, on_delete = models.CASCADE, related_name = "endorsement")
+    user                = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name = "endorsed_skills")
+    skill_name          = models.CharField(max_length = 50)
  
+
+# Social Profile
     
 class SocialProfile(models.Model):
     user                 = models.OneToOneField(UserProfile, on_delete = models.CASCADE, related_name ='social_profile')

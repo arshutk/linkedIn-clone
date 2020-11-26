@@ -30,6 +30,7 @@ urlpatterns = [
     path('get_academic/<int:profile_id>/', views.GetAcademicView.as_view()),
     path('skills/<int:profile_id>/', views.SkillView.as_view()),
     path('skills/update/<int:skill_id>/', views.SkillUpdateView.as_view()),
+    path('skills/endorse/<int:skill_id>/', views.SkillEndorsementView.as_view()),
 
     path('view/social_profile/', views.SocialProfileView.as_view()),
 
