@@ -259,7 +259,7 @@ class UserInfo(views.APIView):
         user_tagline = user.social_profile.tagline
         connection   = Connection.objects.filter(sender = user, has_been_accepted = True).count() + \
                        Connection.objects.filter(receiver = user, has_been_accepted = True).count()
-        bookmarks    = user.articles.count()
+        bookmarks    = user.bookmarked_posts.count()
         
         return Response({'user_name': user_name,
                         'user_avatar': user_avatar,

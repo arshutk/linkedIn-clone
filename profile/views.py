@@ -6,7 +6,7 @@ from profile.models import  WorkExperience, Education, LicenseAndCertification, 
 
 from profile.serializers import WorkExperienceSerializer, EducationSerializer, LicenseAndCertificationSerializer, \
                                 VolunteerExperienceSerializer, CourseSerializer, ProjectSerializer, TestScoreSerializer, \
-                                SkillSerializer, EndorsementSerializer, SocialProfileSerializer, ProfileViewSerializer, JobCreateVacanySerializer, \
+                                SkillSerializer, SkillCreateSerializer, EndorsementSerializer, SocialProfileSerializer, ProfileViewSerializer, JobCreateVacanySerializer, \
                                 JobApplicationCreateSerializer, JobApplicationSerializer, JobVacanySerializer
 
 from rest_framework import views, generics, viewsets
@@ -222,14 +222,14 @@ class SkillView(views.APIView):
                 if len(skills) <= 3:
                     data['top_skills'] = json.dumps(skills)
                     data['skills_list'] = json.dumps(skills)
-                    serializer = SkillSerializer(data = data, context={'request': request})
+                    serializer = SkillCreateSerializer(data = data, context={'request': request})
                     if serializer.is_valid():
                         serializer.save()
                         return Response(serializer.data, status = status.HTTP_201_CREATED)
                     return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
                 data['top_skills'] = json.dumps(skills[:3])
                 data['skills_list'] = json.dumps(skills)
-                serializer = SkillSerializer(data = data)
+                serializer = SkillCreateSerializer(data = data)
                 if serializer.is_valid():
                     serializer.save()
                     return Response(serializer.data, status = status.HTTP_201_CREATED)
@@ -312,7 +312,7 @@ class SkillEndorsementView(views.APIView):
         skill = get_object_or_404(Skill, id = skill_id)   
         skills_list = json.decoder.JSONDecoder().decode(skill.skills_list)
         
-        for endorsement in skill.endorsement.all():
+        for endorsement in skill.endorsements.all():
             if endorsed_skill == endorsement.skill_name and user == endorsement.user:
                 return Response({'detail':'Cannot endorse a skill twice.'}, status = status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -711,15 +711,14 @@ class VacancyRecommendView(views.APIView):
         except:
             user_skills = None
         query = JobVacancy.objects.all()
+        print(query)
         response = list()
         if user_skills:
             for vacancy in query:
                 try:
                     for skill in vacancy.skills_required.split(','):
-                        # print('Django' in user_skills)
                         if skill.strip() in user_skills:
                             response.append(vacancy)
-                            print(skill.strip() in user_skills)
                             break
                 except:
                     continue
@@ -732,7 +731,8 @@ class VacancyRecommendView(views.APIView):
             return Response(serializer.data, status = status.HTTP_200_OK)
         query = choice(query)
         serializer = JobVacanySerializer(query, many = True, context = {'request': request, 'user':user})
-        return Response(serializer.data[:10], status = status.HTTP_200_OK)
+        print(serializer.data)
+        return Response(serializer.data, status = status.HTTP_200_OK)
                 
         
 # Search

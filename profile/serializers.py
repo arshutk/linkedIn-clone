@@ -98,10 +98,14 @@ class TestScoreSerializer(serializers.ModelSerializer):
         response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data
         return response
   
-  
+class SkillCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model   = Skill
+        fields  = '__all__'
 
 class SkillSerializer(serializers.ModelSerializer):
     
+    # skills_list        = fields.MultipleChoiceField(choices = SKILLS)   
     class Meta:
         model   = Skill
         fields  = '__all__'
@@ -110,16 +114,66 @@ class SkillSerializer(serializers.ModelSerializer):
         response = super().to_representation(instance)
         response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data['id']
         response['top_skills'] = json.decoder.JSONDecoder().decode(instance.top_skills)
+        # Temporary (remove later)
         response['skills_list'] = json.decoder.JSONDecoder().decode(instance.skills_list)
         return response
     
+# class SkillSerializer(serializers.ModelSerializer):
+    
+#     class Meta:
+#         model   = Skill
+#         fields  = ('id',)
+              
+#     def to_representation(self,instance):
+#         response = super().to_representation(instance)
+#         response['user'] = UserProfileSerializer(instance.user, context = {'request': self.context.get('request')}).data['id']
+#         response['top_skills'] = json.decoder.JSONDecoder().decode(instance.top_skills)
+#         response['skills_list'] = self.get_skills_list(instance)
+#         return response
+    
+#     def get_skills_list(self, instance):
+#         skills_list = json.decoder.JSONDecoder().decode(instance.skills_list)
+#         endorsed_skill = instance.endorsements.values_list('skill_name', flat = True).distinct()
+#         a = list()
+#         for skill in skills_list:
+#             if skill in endorsed_skill:
+#                 query = instance.endorsements.filter(skill_name = skill)
+#                 serializer = GetEndorsementSerializer(query, many = True, context = {'request': self.context.get('request')})
+#                 a.append({skill : serializer.data})
+#             else:
+#                 a.append({skill : None})
+#         return a
+    
 
 class EndorsementSerializer(serializers.ModelSerializer):
+    
     class Meta:
         model   = Endorsement
-        fields  = '__all__'
-    
+        fields  = '__all__'    
         
+        
+class GetEndorsementSerializer(serializers.ModelSerializer):
+    endorsement_id = serializers.CharField(source = 'id')
+    
+    class Meta:
+        model   = Endorsement
+        fields  = ('endorsement_id',)    
+        
+    def to_representation(self,instance):
+        response = super().to_representation(instance)
+        response['endorser_id'] = instance.user.id
+        response['endorser_name'] = f'{instance.user.first_name} {instance.user.last_name}'
+        response['endorser_tagline'] = instance.user.social_profile.tagline
+        response['endorser_avatar'] = self.get_endorser_avatar(instance)
+        return response         
+        
+    def get_endorser_avatar(self, instance):
+        try:
+            name = instance.user.avatar.url
+            url  = self.context['request'].build_absolute_uri(name)
+            return url
+        except:
+            return None
     
     
 class SocialProfileSerializer(serializers.ModelSerializer):
@@ -144,7 +198,7 @@ class ProfileViewSerializer(serializers.HyperlinkedModelSerializer):
         
 class JobVacanySerializer(serializers.ModelSerializer):
     vacancy_id = serializers.CharField(source = 'id')
-    # logo = serializers.CharField(source = 'file_linked')
+
     class Meta:
         model   = JobVacancy
         fields  = ('vacancy_id', 'title', 'organization', 'location','employment_type',

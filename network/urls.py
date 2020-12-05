@@ -18,7 +18,7 @@ urlpatterns = [
     
     path('delete/connection/<int:connection_id>/', views.ConnectionDeleteView.as_view()),
     
-    path('view/pending_connection/<str:filter>/', views.PendingConnectionRequestView.as_view()),
+    path('view/pending_connection/', views.PendingConnectionRequestView.as_view()),
     
     path('view/connections/', views.NetworkView.as_view()),
     

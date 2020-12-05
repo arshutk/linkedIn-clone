@@ -6,27 +6,32 @@ from django.utils import timezone
 
 from profile.models import JobApplication
 
+
 class NotificationSerializer(serializers.ModelSerializer):
-    
+
     class Meta:
-        model  = Notification
-        fields = ('action','detail',)
-        
-    def to_representation(self,instance):
+        model = Notification
+        fields = ('action', 'detail',)
+
+    def to_representation(self, instance):
         response = super().to_representation(instance)
         response['created_at'] = self.get_created_at(instance)
         response['source_id'] = self.get_source_id(instance)
         response['source_name'] = f'{instance.source.first_name} {instance.source.last_name}'
-        response['source_avatar'] = self.context['request'].build_absolute_uri(instance.source.avatar.url)
+        try:
+            response['source_avatar'] = self.context['request'].build_absolute_uri(
+                instance.source.avatar.url)
+        except:
+            response['source_avatar'] = None
         return response
-    
+
     def get_source_id(self, instance):
         if instance.action == 'application_accepted':
             return instance.action_id
         return instance.source.id
-        
+
     def get_created_at(self, instance):
-        time = timezone.localtime(timezone.now()) - instance.created_at 
+        time = timezone.localtime(timezone.now()) - instance.created_at
         if time.days < 7:
             if time.days == 0:
                 created_at = 'today'
@@ -50,4 +55,3 @@ class NotificationSerializer(serializers.ModelSerializer):
             else:
                 created_at = f'{int(time.days/365)} years'
         return created_at
-        

@@ -42,27 +42,31 @@ class ChatConsumer(AsyncConsumer):
         
     async def websocket_receive(self, event):
         try:
-            data = event.get('text')
+            data = json.loads(event.get('text'))['text']
+            
+            if data:
+                recent_message = await self.create_chat(self.sender, self.thread_id, data)
+                await self.channel_layer.group_send(
+                    self.chat_room,
+                    {
+                        'type': 'send_recent_message',
+                        'text': recent_message
+                    }
+                )
+            
+            else:
+                await self.send({
+                'type': 'websocket.send',
+                'text': 'No text containing message found.'
+                })
+            
         except:
             await self.send({
             'type': 'websocket.send',
             'text': 'Error, kindly send data in right format.'
             })
 
-        if data:
-            recent_message = await self.create_chat(self.sender, self.thread_id, data)
-            await self.channel_layer.group_send(
-            self.chat_room,
-            {
-                'type': 'send_recent_message',
-                'text': recent_message
-            }
-        )
-        else:
-            await self.send({
-            'type': 'websocket.send',
-            'text': 'No text containing message found.'
-            })
+        
      
     
     async def websocket_disconnect(self, event):
@@ -72,16 +76,17 @@ class ChatConsumer(AsyncConsumer):
     @database_sync_to_async
     def get_chat(self, thread_id):
         chat = Thread.objects.get(id = thread_id).messages
-        serializer = ChatSerializer(chat, many = True)
+        serializer = ChatSerializer(chat, many = True, context = {'sender' : self.sender})
         return json.dumps({"messages" : serializer.data})
     
     @database_sync_to_async
     def create_chat(self, sender_id, thread_id, text):
-        serializer = ChatSerializer(data = {'sender' : sender_id, 'thread' : thread_id, 'text' : text})
+        serializer = ChatSerializer(data = {'sender' : sender_id, 'thread' : thread_id, 'text' : text}, context = {'sender' : self.sender})
         if serializer.is_valid():
             serializer.save()
             # return json.dumps({"messsage" : serializer.data})
-            return text
+            return json.dumps(serializer.data)
+            # return text
         return serializer.errors
     
     @database_sync_to_async

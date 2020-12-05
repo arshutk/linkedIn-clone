@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from network.models import Connection
+from network.models import Connection, Follow
 
 # class ConnectionInline(admin.TabularInline):
 #     model = Connection
@@ -11,3 +11,4 @@ from network.models import Connection
 #     ]
     
 admin.site.register(Connection)
+admin.site.register(Follow)

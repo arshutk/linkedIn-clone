@@ -33,7 +33,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    # 'channels',
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'userauth',
     'rest_framework',
     'corsheaders',
-    'phonenumber_field',
     'multiselectfield',
     'profile',
     'network',
@@ -83,9 +82,9 @@ TEMPLATES = [
     },
 ]
 
-# ASGI_APPLICATION = 'linkedin.asgi.application'
+ASGI_APPLICATION = 'linkedin.asgi.application'
 
-WSGI_APPLICATION = 'linkedin.wsgi.application'
+# WSGI_APPLICATION = 'linkedin.wsgi.application'
 
 
 # Database

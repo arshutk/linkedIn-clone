@@ -6,9 +6,9 @@ from userauth.models import User, UserProfile
 
 from userauth.serializers import UserSerializer, UserProfileSerializer
 
-from network.models import Connection
+from network.models import Connection, Follow
 
-from network.serializers import ConnectionSerializer
+from network.serializers import ConnectionSerializer, FollowSerializer
 
 from rest_framework.response import Response
 
@@ -31,28 +31,24 @@ class FollowView(views.APIView):
         follower    = request.user.profile
         
         if follower not in user.followers.all():
-            user.followers.add(follower)
-            return Response({'detail': "Follower added."}, status=status.HTTP_202_ACCEPTED) 
+            serializer = FollowSerializer(data = {'user': user.id, 'follower': follower.id}, context = {'request': request})
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'detail': "Follower added."}, status=status.HTTP_202_ACCEPTED) 
+            return Response(serializer.errors, status=status.HTTP_202_ACCEPTED) 
         return Response({'detail': "Already followed."},status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, profile_id):
         user        = get_object_or_404(UserProfile, id = profile_id)
         follower    = request.user.profile
- 
-        if user in user.followers.all():
-            user.followers.remove(follower)
+        print(user.followers.all())
+        if user.followers.filter(follower = follower):
+            user.followers.get(follower = follower).delete()
             return Response({'detail': "User Unfollowed."},status=status.HTTP_201_CREATED) 
         return Response({'detail': "User is not followed."},status=status.HTTP_400_BAD_REQUEST)
   
     
 class ConnectionSenderView(views.APIView):   
-    
-    def get_receiver(self, receiver_id):
-        try:
-            return UserProfile.objects.get(id = receiver_id)
-        except:
-            raise Http404
-        
         
     def post(self, request, receiver_id):
         receiver     = get_object_or_404(UserProfile, id = receiver_id)
@@ -115,9 +111,9 @@ class PendingConnectionRequestView(views.APIView):
             data.append(record.copy())
         return data
         
-    def get(self, request, filter = None):
+    def get(self, request):
         user = get_object_or_404(UserProfile, id = request.user.profile.id)
-        
+        filter = self.request.query_params.get('filter')
         if filter == 'received':
             connections = Connection.objects.filter(receiver = user, has_been_accepted = False, is_visible = True)
             if connections.exists():
@@ -134,18 +130,29 @@ class PendingConnectionRequestView(views.APIView):
             else:    
                 return Response({'detail': "Search with relevent filters."}, status=status.HTTP_400_BAD_REQUEST)
     
-    def patch(self, request, filter = None):
+    def patch(self, request):
         try:
             connection_id       = request.data.get('connection_id')
             connection          = Connection.objects.get(id = connection_id)
         except:
             raise Http404
-        if request.user.profile == connection.receiver:  
+        user = request.user.profile
+        if user == connection.receiver:  
             if not connection.has_been_accepted:
                 connection.has_been_accepted = True
                 connection.save()
-                connection.receiver.followers.add(connection.sender)
-                connection.sender.followers.add(connection.receiver)
+                condition1 = user.followers.filter(follower = connection.sender).exists()
+                condition2 = connection.sender.followers.filter(follower = user).exists()
+                if not condition1 and not condition2:
+                    Follow.objects.bulk_create([
+                        Follow(user = user, follower = connection.sender),
+                        Follow(user = connection.sender, follower = user)
+                    ])
+                else:
+                    if not condition1:
+                        Follow.objects.create(user = user, follower = connection.sender)
+                    elif not condition2:
+                        Follow.objects.create(user = connection.sender, follower = user)
                 return Response({'detail':'User added to your network.'}, status = status.HTTP_201_CREATED)
             return Response({'detail':'User already added to your network.'}, status = status.HTTP_226_IM_USED)
         return Response({'detail':'You can\'t manage network of other users.' },status = status.HTTP_401_UNAUTHORIZED)        
@@ -161,18 +168,18 @@ class ConnectionDeleteView(views.APIView):
         if requesting_user == sender or requesting_user == receiver: 
             if receiver == requesting_user:
                 if connection and connection.has_been_accepted:
+                    connection.receiver.followers.get(follower = connection.sender).delete()
+                    connection.sender.followers.get(follower = connection.receiver).delete()
                     connection.delete()
-                    connection.receiver.followers.remove(connection.sender)
-                    connection.sender.followers.remove(connection.receiver)
                     return Response({'detail': "Connection deleted"}, status=status.HTTP_204_NO_CONTENT)
                 # connection.is_visible = False
                 # connection.save()
                 connection.delete()
                 return Response({'detail': "Connection request has been removed."}, status=status.HTTP_202_ACCEPTED)
             if connection and connection.has_been_accepted: # For sender
+                connection.receiver.followers.get(follower = connection.sender).delete()
+                connection.sender.followers.get(follower = connection.receiver).delete()
                 connection.delete()
-                connection.receiver.followers.remove(connection.sender)
-                connection.sender.followers.remove(connection.receiver)
                 return Response({'detail': "Connection deleted"}, status=status.HTTP_204_NO_CONTENT)
             connection.delete()
             return Response({'detail': "Connection request deleted."}, status=status.HTTP_202_ACCEPTED)

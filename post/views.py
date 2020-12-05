@@ -17,6 +17,8 @@ from django.http import Http404
 
 from userauth.models import User, UserProfile
 
+from network.models import Follow
+
 from datetime import datetime, timedelta, timezone
 
 from django.shortcuts import get_object_or_404
@@ -292,32 +294,43 @@ class FeedView(views.APIView):
                 
     def get(self, request):  
         user = request.user.profile
-        user_following = UserProfile.objects.filter(followers = user).all()
-        user_posts = Post.objects.filter(written_by = user).all()
+        user_following = Follow.objects.filter(follower = user).all()
+        # user_posts = Post.objects.filter(written_by = user).all()
         response = list()
         for person in user_following:
-            for vote in person.votes.filter(vote_type = 'like').all(): 
+            for vote in person.user.votes.filter(vote_type = 'like').all(): 
                 if vote.post in response:
                     continue
                 serializer = PostSerializer(vote.post, context = {'request':request, 'user':user.user})
                 data = serializer.data.copy()
-                data['message'] = f'{person.first_name} {person.last_name} liked this post'
+                data['message'] = f'{person.user.first_name} {person.user.last_name} liked this post'
                 response.append(data)
-            for comment in person.comments_made.all():
+            for comment in person.user.comments_made.all():
                 if comment.post in response:
                     continue
                 serializer = PostSerializer(comment.post, context = {'request':request, 'user':user.user})
                 data = serializer.data.copy()
-                data['message'] = f'{person.first_name} {person.last_name} commented on this post'
+                data['message'] = f'{person.user.first_name} {person.user.last_name} commented on this post'
                 response.append(data)
-        for post in user_posts:
-            if post in response:
+        for user_followed in user_following:
+            posts = Post.objects.filter(written_by = user_followed.user).all()
+            for post in posts:
+                if post in response:
                     continue
-            serializer = PostSerializer(post, context = {'request': request, 'user': user.user})
-            data = serializer.data.copy()
-            data['message'] = None
-            response.append(data)
+                serializer = PostSerializer(post, context = {'request':request, 'user':user.user})
+                data = serializer.data.copy()
+                data['message'] = None
+                response.append(data)
         return Response(response, status = status.HTTP_200_OK)
+            
+        # for post in user_posts:
+        #     if post in response:
+        #             continue
+        #     serializer = PostSerializer(post, context = {'request': request, 'user': user.user})
+        #     data = serializer.data.copy()
+        #     data['message'] = None
+        #     response.append(data)
+        # return Response(response, status = status.HTTP_200_OK)
         
         
          

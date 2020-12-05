@@ -15,11 +15,14 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 
 from chat import routing
 
+from django.core.asgi import get_asgi_application
+
 # os.environ.setdefault("DJANGO_SETTINGS_MODULE", "linkedin.settings")
 
 application = ProtocolTypeRouter({
 
     # http urls are automatically routed
+    "http": get_asgi_application(),
     
     "websocket": AuthMiddlewareStack(
         URLRouter(

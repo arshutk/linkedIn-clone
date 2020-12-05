@@ -176,7 +176,7 @@ class Skill(models.Model):
         verbose_name_plural = 'Skills'
         
 class Endorsement(models.Model):
-    skill               = models.ForeignKey(Skill, on_delete = models.CASCADE, related_name = "endorsement")
+    skill               = models.ForeignKey(Skill, on_delete = models.CASCADE, related_name = "endorsements")
     user                = models.ForeignKey(UserProfile, on_delete = models.CASCADE, related_name = "endorsed_skills")
     skill_name          = models.CharField(max_length = 50)
  
